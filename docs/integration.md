@@ -12,11 +12,11 @@ This MCP server is consumed from the Ore AI backend using AI SDK runtime discove
 ## AI SDK sketch
 
 ```ts
-import { createMCPClient } from "ai";
+import { createMCPClient } from "@ai-sdk/mcp";
 
 const mcpClient = await createMCPClient({
 	transport: {
-		type: "streamable-http",
+		type: "http",
 		url: "https://ore-ai-mcp.example.com/mcp",
 		headers: {
 			"x-ore-internal-secret": process.env.MCP_INTERNAL_SHARED_SECRET!,
@@ -26,7 +26,12 @@ const mcpClient = await createMCPClient({
 	},
 });
 
-const tools = await mcpClient.tools();
+try {
+	const tools = await mcpClient.tools();
+	// pass tools to generateText/streamText
+} finally {
+	await mcpClient.close();
+}
 ```
 
 ## Tool discovery contract
