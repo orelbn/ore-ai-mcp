@@ -35,20 +35,6 @@ function requiredHeader(request: Request, headerName: string): string {
 	return value;
 }
 
-function resolveAllowedCallers(env: Env): string[] {
-	const allowlist = (env.MCP_ALLOWED_CALLERS ?? "")
-		.split(",")
-		.map((entry) => entry.trim())
-		.filter((entry) => entry.length > 0);
-
-	if (allowlist.length > 0) {
-		return allowlist;
-	}
-
-	const fallback = env.MCP_ALLOWED_CALLER.trim();
-	return fallback ? [fallback] : [];
-}
-
 export function authenticateRequest(
 	request: Request,
 	env: Env,
@@ -74,8 +60,7 @@ export function authenticateRequest(
 		if (!callerWorker) {
 			throw new AppError("FORBIDDEN", "Missing cf-worker caller identity", 403);
 		}
-		const allowedCallers = resolveAllowedCallers(env);
-		if (allowedCallers.length === 0 || !allowedCallers.includes(callerWorker)) {
+		if (callerWorker !== env.MCP_ALLOWED_CALLER) {
 			throw new AppError("FORBIDDEN", "Caller worker is not allowed", 403);
 		}
 	}

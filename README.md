@@ -43,11 +43,6 @@ Safe starter templates are provided in `.private-context.example/`.
 - `x-ore-user-id`
 - `x-ore-request-id`
 
-## Caller allowlist config
-
-- `MCP_ALLOWED_CALLERS` (optional): comma-separated list of allowed values for the `cf-worker` header.
-- `MCP_ALLOWED_CALLER` (legacy fallback): single allowed caller used when `MCP_ALLOWED_CALLERS` is not set or empty.
-
 ## Local development
 
 ```bash
