@@ -129,6 +129,79 @@ describe("authenticateRequest", () => {
 		}
 	});
 
+	it("accepts callers from MCP_ALLOWED_CALLERS allowlist", () => {
+		const request = makeRequest({
+			[HEADER_INTERNAL_SECRET]: "top-secret",
+			[HEADER_USER_ID]: "user_123",
+			[HEADER_REQUEST_ID]: "req_123",
+			"cf-worker": "ore-ai",
+		});
+
+		const caller = authenticateRequest(request, {
+			...baseEnv,
+			MCP_ALLOWED_CALLERS: "foo-worker, ore-ai, another-worker",
+		});
+
+		expect(caller.userId).toBe("user_123");
+		expect(caller.requestId).toBe("req_123");
+		expect(caller.callerWorker).toBe("ore-ai");
+	});
+
+	it("rejects callers not in MCP_ALLOWED_CALLERS allowlist", () => {
+		const request = makeRequest({
+			[HEADER_INTERNAL_SECRET]: "top-secret",
+			[HEADER_USER_ID]: "user_123",
+			[HEADER_REQUEST_ID]: "req_123",
+			"cf-worker": "ore-ai",
+		});
+
+		try {
+			authenticateRequest(request, {
+				...baseEnv,
+				MCP_ALLOWED_CALLERS: "foo-worker,bar-worker",
+			});
+			expect.unreachable();
+		} catch (error) {
+			expect((error as AppError).code).toBe("FORBIDDEN");
+		}
+	});
+
+	it("falls back to MCP_ALLOWED_CALLER when MCP_ALLOWED_CALLERS is unset", () => {
+		const request = makeRequest({
+			[HEADER_INTERNAL_SECRET]: "top-secret",
+			[HEADER_USER_ID]: "user_123",
+			[HEADER_REQUEST_ID]: "req_123",
+			"cf-worker": "ore-ai",
+		});
+
+		const caller = authenticateRequest(request, {
+			...baseEnv,
+			MCP_ALLOWED_CALLERS: undefined,
+		});
+
+		expect(caller.userId).toBe("user_123");
+		expect(caller.requestId).toBe("req_123");
+		expect(caller.callerWorker).toBe("ore-ai");
+	});
+
+	it("falls back to MCP_ALLOWED_CALLER when MCP_ALLOWED_CALLERS is empty", () => {
+		const request = makeRequest({
+			[HEADER_INTERNAL_SECRET]: "top-secret",
+			[HEADER_USER_ID]: "user_123",
+			[HEADER_REQUEST_ID]: "req_123",
+			"cf-worker": "ore-ai",
+		});
+
+		const caller = authenticateRequest(request, {
+			...baseEnv,
+			MCP_ALLOWED_CALLERS: "   ",
+		});
+
+		expect(caller.userId).toBe("user_123");
+		expect(caller.requestId).toBe("req_123");
+		expect(caller.callerWorker).toBe("ore-ai");
+	});
+
 	it("allows missing cf-worker when enforcement is disabled", () => {
 		const request = makeRequest({
 			[HEADER_INTERNAL_SECRET]: "top-secret",

@@ -7,6 +7,7 @@ export type ErrorCode =
 export interface Env {
 	MCP_INTERNAL_SHARED_SECRET: string;
 	MCP_ALLOWED_CALLER: string;
+	MCP_ALLOWED_CALLERS?: string;
 	MCP_ENFORCE_CF_WORKER?: string;
 	MCP_DISABLED_TOOLS?: string;
 	PRIVATE_CONTEXT_BUCKET: R2Bucket;

@@ -16,6 +16,7 @@
 	],
 	"vars": {
 		"MCP_ALLOWED_CALLER": "ore-ai",
+		"MCP_ALLOWED_CALLERS": "ore-ai",
 		"MCP_ENFORCE_CF_WORKER": "false",
 		"MCP_DISABLED_TOOLS": ""
 	},
@@ -34,6 +35,7 @@
 			],
 			"vars": {
 				"MCP_ALLOWED_CALLER": "ore-ai",
+				"MCP_ALLOWED_CALLERS": "ore-ai",
 				"MCP_ENFORCE_CF_WORKER": "true",
 				"MCP_DISABLED_TOOLS": ""
 			}
@@ -52,6 +54,7 @@
 			],
 			"vars": {
 				"MCP_ALLOWED_CALLER": "ore-ai",
+				"MCP_ALLOWED_CALLERS": "ore-ai",
 				"MCP_ENFORCE_CF_WORKER": "true",
 				"MCP_DISABLED_TOOLS": ""
 			}
