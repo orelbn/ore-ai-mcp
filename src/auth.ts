@@ -45,7 +45,7 @@ function resolveAllowedCallers(env: Env): string[] {
 		return allowlist;
 	}
 
-	const fallback = (env.MCP_ALLOWED_CALLER ?? "").trim();
+	const fallback = env.MCP_ALLOWED_CALLER.trim();
 	return fallback ? [fallback] : [];
 }
 
