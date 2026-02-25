@@ -1,0 +1,13 @@
+{
+	"version": 1,
+	"entries": [
+		{
+			"contextId": "orel-top-coffee-shops",
+			"title": "Orel Top Coffee Shops",
+			"description": "Local notes about current favorite coffee spots.",
+			"uiHint": "coffee-shops-markdown",
+			"markdownPath": "notes/coffee/top-coffee-shops.md",
+			"imagePaths": []
+		}
+	]
+}

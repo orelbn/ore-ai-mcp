@@ -1,0 +1,60 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "ore-ai-mcp",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-02-24",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"observability": {
+		"enabled": true
+	},
+	"r2_buckets": [
+		{
+			"binding": "PRIVATE_CONTEXT_BUCKET",
+			"bucket_name": "ore-ai-private-context-dev",
+			"preview_bucket_name": "ore-ai-private-context-dev"
+		}
+	],
+	"vars": {
+		"MCP_ALLOWED_CALLER": "ore-ai",
+		"MCP_ENFORCE_CF_WORKER": "false",
+		"MCP_DISABLED_TOOLS": ""
+	},
+	"env": {
+		"staging": {
+			"name": "ore-ai-mcp-staging",
+			"observability": {
+				"enabled": true
+			},
+			"r2_buckets": [
+				{
+					"binding": "PRIVATE_CONTEXT_BUCKET",
+					"bucket_name": "ore-ai-private-context-staging",
+					"preview_bucket_name": "ore-ai-private-context-staging"
+				}
+			],
+			"vars": {
+				"MCP_ALLOWED_CALLER": "ore-ai",
+				"MCP_ENFORCE_CF_WORKER": "true",
+				"MCP_DISABLED_TOOLS": ""
+			}
+		},
+		"production": {
+			"name": "ore-ai-mcp",
+			"observability": {
+				"enabled": true
+			},
+			"r2_buckets": [
+				{
+					"binding": "PRIVATE_CONTEXT_BUCKET",
+					"bucket_name": "ore-ai-private-context-production",
+					"preview_bucket_name": "ore-ai-private-context-production"
+				}
+			],
+			"vars": {
+				"MCP_ALLOWED_CALLER": "ore-ai",
+				"MCP_ENFORCE_CF_WORKER": "true",
+				"MCP_DISABLED_TOOLS": ""
+			}
+		}
+	}
+}
