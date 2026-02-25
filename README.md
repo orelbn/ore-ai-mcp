@@ -76,6 +76,8 @@ bun run test
 bun run build
 ```
 
+`bun run typecheck` uses TSGo via `@typescript/native-preview` (`tsgo --noEmit`).
+
 ## Deployment
 
 Set secrets first:
