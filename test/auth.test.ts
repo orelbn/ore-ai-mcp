@@ -202,6 +202,26 @@ describe("authenticateRequest", () => {
 		expect(caller.callerWorker).toBe("ore-ai");
 	});
 
+	it("returns FORBIDDEN when no caller allowlist value is configured", () => {
+		const request = makeRequest({
+			[HEADER_INTERNAL_SECRET]: "top-secret",
+			[HEADER_USER_ID]: "user_123",
+			[HEADER_REQUEST_ID]: "req_123",
+			"cf-worker": "ore-ai",
+		});
+
+		try {
+			authenticateRequest(request, {
+				...baseEnv,
+				MCP_ALLOWED_CALLERS: "",
+				MCP_ALLOWED_CALLER: undefined as unknown as string,
+			});
+			expect.unreachable();
+		} catch (error) {
+			expect((error as AppError).code).toBe("FORBIDDEN");
+		}
+	});
+
 	it("allows missing cf-worker when enforcement is disabled", () => {
 		const request = makeRequest({
 			[HEADER_INTERNAL_SECRET]: "top-secret",
