@@ -2,25 +2,19 @@
 
 ## Rotate internal secret
 
-1. Set new secret in staging:
-   - `wrangler secret put MCP_INTERNAL_SHARED_SECRET --env staging`
-2. Deploy staging and verify MCP smoke tests.
-3. Rotate backend caller secret.
-4. Set production secret:
+1. Set production secret:
    - `wrangler secret put MCP_INTERNAL_SHARED_SECRET --env production`
-5. Deploy production.
+2. Rotate backend caller secret.
+3. Deploy production and verify MCP smoke tests.
 
 ## Update private context
 
 1. Edit local files in `.private-context/`.
 2. Validate:
    - `bun run context:validate`
-3. Dry-run staging sync:
-   - `bun run context:sync --env staging --dry-run`
-4. Apply staging sync:
-   - `bun run context:sync --env staging`
-5. Verify tool output in staging.
-6. Apply production sync:
+3. Dry-run production sync:
+   - `bun run context:sync --env production --dry-run`
+4. Apply production sync:
    - `bun run context:sync --env production`
 
 ## Mirror-delete behavior

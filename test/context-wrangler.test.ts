@@ -16,23 +16,25 @@ function makeTempRepoWithWrangler(config: string): string {
 }
 
 describe("context wrangler helpers", () => {
-	it("resolves top-level and env bucket names from jsonc", () => {
+	it("resolves top-level and production env bucket names from jsonc", () => {
 		const repoRoot = makeTempRepoWithWrangler(`{
 			// top-level bucket
 			"r2_buckets": [
 				{ "binding": "PRIVATE_CONTEXT_BUCKET", "bucket_name": "ore-context" }
 			],
 			"env": {
-				"staging": {
+				"production": {
 					"r2_buckets": [
-						{ "binding": "PRIVATE_CONTEXT_BUCKET", "bucket_name": "ore-context-staging" }
+						{ "binding": "PRIVATE_CONTEXT_BUCKET", "bucket_name": "ore-context-production" }
 					]
 				}
 			}
 		}`);
 
 		expect(resolveBucketName(repoRoot)).toBe("ore-context");
-		expect(resolveBucketName(repoRoot, "staging")).toBe("ore-context-staging");
+		expect(resolveBucketName(repoRoot, "production")).toBe(
+			"ore-context-production",
+		);
 
 		rmSync(repoRoot, { recursive: true, force: true });
 	});
@@ -50,7 +52,7 @@ describe("context wrangler helpers", () => {
 	});
 
 	it("builds put/delete/get commands with env and mode flags", () => {
-		const syncArgs = { env: "staging", dryRun: false, local: true };
+		const syncArgs = { env: "production", dryRun: false, local: true };
 		expect(
 			buildR2CommandForPut(
 				"ore-context",
@@ -69,7 +71,7 @@ describe("context wrangler helpers", () => {
 			"--content-type",
 			"text/markdown",
 			"--env",
-			"staging",
+			"production",
 			"--local",
 		]);
 

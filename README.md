@@ -57,11 +57,8 @@ bun run dev
 # Validate local private context files
 bun run context:validate
 
-# Preview sync to staging
-bun run context:sync --env staging --dry-run
-
-# Apply sync to staging
-bun run context:sync --env staging
+# Preview sync to production
+bun run context:sync --env production --dry-run
 
 # Apply sync to production
 bun run context:sync --env production
@@ -83,14 +80,12 @@ bun run build
 Set secrets first:
 
 ```bash
-wrangler secret put MCP_INTERNAL_SHARED_SECRET --env staging
 wrangler secret put MCP_INTERNAL_SHARED_SECRET --env production
 ```
 
 Deploy:
 
 ```bash
-bun run deploy:staging
 bun run deploy:prod
 ```
 

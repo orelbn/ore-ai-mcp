@@ -11,13 +11,13 @@ describe("context cli argument parsing", () => {
 	});
 
 	it("parses split env arg with dry-run and local", () => {
-		expect(parseSyncArgs(["--env", "staging", "--dry-run", "--local"])).toEqual(
-			{
-				env: "staging",
-				dryRun: true,
-				local: true,
-			},
-		);
+		expect(
+			parseSyncArgs(["--env", "production", "--dry-run", "--local"]),
+		).toEqual({
+			env: "production",
+			dryRun: true,
+			local: true,
+		});
 	});
 
 	it("parses inline env arg and remote mode", () => {
