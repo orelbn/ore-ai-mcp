@@ -58,4 +58,4 @@ Each generated context tool returns structured content fields:
 
 - `ore.context.*` -> local context/image renderer(s).
 - Unknown tool names -> generic fallback renderer.
-- `imageAssetKeys` are private object keys; app proxy is responsible for secure streaming.
+- `imageAssetKeys` are object keys; app proxy is responsible for secure streaming.

@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { PRIVATE_CONTEXT_INDEX_KEY } from "../src/constants";
+import { CONTEXT_INDEX_KEY } from "../src/constants";
 import { contextIndexSchema } from "../src/context-index";
 import {
 	buildArtifacts,
@@ -24,7 +24,7 @@ function tryReadRemoteIndex(
 ) {
 	try {
 		const output = runWrangler(
-			buildR2CommandForGet(bucketName, PRIVATE_CONTEXT_INDEX_KEY, syncArgs),
+			buildR2CommandForGet(bucketName, CONTEXT_INDEX_KEY, syncArgs),
 			repoRoot,
 		);
 		if (!output.trim()) {
@@ -40,7 +40,8 @@ function tryReadRemoteIndex(
 		if (
 			message.includes("NoSuchKey") ||
 			message.includes("404") ||
-			message.includes("not found")
+			message.includes("not found") ||
+			message.includes("does not exist")
 		) {
 			return null;
 		}
@@ -85,7 +86,7 @@ async function main() {
 			for (const upload of artifacts.uploads) {
 				console.log(`UPLOAD ${upload.remoteKey} <= ${upload.localPath}`);
 			}
-			console.log(`UPLOAD ${PRIVATE_CONTEXT_INDEX_KEY} <= ${indexPath}`);
+			console.log(`UPLOAD ${CONTEXT_INDEX_KEY} <= ${indexPath}`);
 			for (const key of keysToDelete) {
 				console.log(`DELETE ${key}`);
 			}
@@ -108,7 +109,7 @@ async function main() {
 		runWrangler(
 			buildR2CommandForPut(
 				bucketName,
-				PRIVATE_CONTEXT_INDEX_KEY,
+				CONTEXT_INDEX_KEY,
 				indexPath,
 				"application/json",
 				parsedArgs,

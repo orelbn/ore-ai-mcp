@@ -7,7 +7,7 @@ const context: RequestContext = {
 	env: {
 		MCP_INTERNAL_SHARED_SECRET: "secret",
 		MCP_ALLOWED_CALLER: "ore-ai",
-		PRIVATE_CONTEXT_BUCKET: createMockR2Bucket({}),
+		CONTEXT_BUCKET: createMockR2Bucket({}),
 	},
 	userId: "user_123",
 	requestId: "req_123",
@@ -20,7 +20,7 @@ describe("executeTool", () => {
 			context,
 			"ore.context.sample_context",
 			async () => {
-				throw new Error("private context unavailable");
+				throw new Error("context unavailable");
 			},
 		);
 

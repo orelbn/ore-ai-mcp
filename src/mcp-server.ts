@@ -47,16 +47,13 @@ export async function createOreMcpServer(
 			{
 				description:
 					toolEntry.description ??
-					`Get private context markdown for ${toolEntry.title}.`,
+					`Get context markdown for ${toolEntry.title}.`,
 				inputSchema: z.object({}),
 			},
 			async () =>
 				executeTool(context, toolEntry.toolName, async () => {
 					const result = await getContextByToolEntry(context, toolEntry);
-					return toSuccessResult(
-						`Loaded private context: ${toolEntry.title}`,
-						result,
-					);
+					return toSuccessResult(`Loaded context: ${toolEntry.title}`, result);
 				}),
 		);
 	}

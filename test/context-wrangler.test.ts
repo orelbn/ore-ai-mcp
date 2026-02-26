@@ -20,12 +20,12 @@ describe("context wrangler helpers", () => {
 		const repoRoot = makeTempRepoWithWrangler(`{
 			// top-level bucket
 			"r2_buckets": [
-				{ "binding": "PRIVATE_CONTEXT_BUCKET", "bucket_name": "ore-context" }
+				{ "binding": "CONTEXT_BUCKET", "bucket_name": "ore-context" }
 			],
 			"env": {
 				"production": {
 					"r2_buckets": [
-						{ "binding": "PRIVATE_CONTEXT_BUCKET", "bucket_name": "ore-context-production" }
+						{ "binding": "CONTEXT_BUCKET", "bucket_name": "ore-context-production" }
 					]
 				}
 			}
@@ -56,7 +56,7 @@ describe("context wrangler helpers", () => {
 		expect(
 			buildR2CommandForPut(
 				"ore-context",
-				"private-context/markdown/doc.md",
+				"context/markdown/doc.md",
 				"/tmp/doc.md",
 				"text/markdown",
 				syncArgs,
@@ -65,7 +65,7 @@ describe("context wrangler helpers", () => {
 			"r2",
 			"object",
 			"put",
-			"ore-context/private-context/markdown/doc.md",
+			"ore-context/context/markdown/doc.md",
 			"--file",
 			"/tmp/doc.md",
 			"--content-type",
@@ -76,40 +76,32 @@ describe("context wrangler helpers", () => {
 		]);
 
 		expect(
-			buildR2CommandForDelete(
-				"ore-context",
-				"private-context/images/photo.jpg",
-				{
-					env: "production",
-					dryRun: false,
-					local: false,
-				},
-			),
+			buildR2CommandForDelete("ore-context", "context/images/photo.jpg", {
+				env: "production",
+				dryRun: false,
+				local: false,
+			}),
 		).toEqual([
 			"r2",
 			"object",
 			"delete",
-			"ore-context/private-context/images/photo.jpg",
+			"ore-context/context/images/photo.jpg",
 			"--env",
 			"production",
 			"--remote",
 		]);
 
 		expect(
-			buildR2CommandForGet(
-				"ore-context",
-				"private-context/_meta/context-index.json",
-				{
-					env: undefined,
-					dryRun: true,
-					local: false,
-				},
-			),
+			buildR2CommandForGet("ore-context", "context/_meta/context-index.json", {
+				env: undefined,
+				dryRun: true,
+				local: false,
+			}),
 		).toEqual([
 			"r2",
 			"object",
 			"get",
-			"ore-context/private-context/_meta/context-index.json",
+			"ore-context/context/_meta/context-index.json",
 			"--pipe",
 			"--remote",
 		]);

@@ -3,8 +3,8 @@ import { join, resolve } from "node:path";
 import { z } from "zod";
 import { CONTEXT_TOOL_PREFIX } from "../src/constants";
 
-export const PRIVATE_CONTEXT_DIR = ".private-context";
-export const PRIVATE_CONTEXT_MANIFEST = "context-manifest.json";
+export const CONTEXT_DIR = ".context";
+export const CONTEXT_MANIFEST = "context-manifest.json";
 
 const manifestEntrySchema = z.object({
 	contextId: z.string().min(1),
@@ -76,8 +76,12 @@ function ensurePathInside(baseDir: string, pathValue: string): boolean {
 	);
 }
 
+export function resolveContextRoot(repoRoot: string): string {
+	return join(repoRoot, CONTEXT_DIR);
+}
+
 function getManifestPath(repoRoot: string): string {
-	return join(repoRoot, PRIVATE_CONTEXT_DIR, PRIVATE_CONTEXT_MANIFEST);
+	return join(repoRoot, CONTEXT_DIR, CONTEXT_MANIFEST);
 }
 
 export function loadManifest(repoRoot: string): ContextManifest {
@@ -114,7 +118,7 @@ export function validateManifest(
 	const issues: ValidationIssue[] = [];
 	const contextIds = new Set<string>();
 	const toolNames = new Set<string>();
-	const privateContextRoot = join(repoRoot, PRIVATE_CONTEXT_DIR);
+	const contextRoot = resolveContextRoot(repoRoot);
 
 	for (const entry of manifest.entries) {
 		if (contextIds.has(entry.contextId)) {
@@ -158,14 +162,14 @@ export function validateManifest(
 			});
 		}
 
-		if (!ensurePathInside(privateContextRoot, entry.markdownPath)) {
+		if (!ensurePathInside(contextRoot, entry.markdownPath)) {
 			issues.push({
 				path: entry.markdownPath,
-				message: "markdownPath escapes private context directory",
+				message: "markdownPath escapes context directory",
 			});
 		}
 
-		const markdownAbsolutePath = join(privateContextRoot, entry.markdownPath);
+		const markdownAbsolutePath = join(contextRoot, entry.markdownPath);
 		if (!existsSync(markdownAbsolutePath)) {
 			issues.push({
 				path: entry.markdownPath,
@@ -189,14 +193,14 @@ export function validateManifest(
 				});
 			}
 
-			if (!ensurePathInside(privateContextRoot, imagePath)) {
+			if (!ensurePathInside(contextRoot, imagePath)) {
 				issues.push({
 					path: imagePath,
-					message: "image path escapes private context directory",
+					message: "image path escapes context directory",
 				});
 			}
 
-			const imageAbsolutePath = join(privateContextRoot, imagePath);
+			const imageAbsolutePath = join(contextRoot, imagePath);
 			if (!existsSync(imageAbsolutePath)) {
 				issues.push({
 					path: imagePath,

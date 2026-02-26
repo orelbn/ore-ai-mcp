@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { PRIVATE_CONTEXT_BUCKET_BINDING } from "../src/constants";
+import { CONTEXT_BUCKET_BINDING } from "../src/constants";
 import type { SyncArgs } from "./context-types";
 
 function stripComments(jsonc: string): string {
@@ -26,7 +26,7 @@ function buildWranglerEnvArgs(args: SyncArgs): string[] {
 export function resolveBucketName(
 	repoRoot: string,
 	envName?: string,
-	binding = PRIVATE_CONTEXT_BUCKET_BINDING,
+	binding = CONTEXT_BUCKET_BINDING,
 ): string {
 	const configPath = join(repoRoot, "wrangler.jsonc");
 	const raw = readFileSync(configPath, "utf8");

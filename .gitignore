@@ -4,5 +4,5 @@ node_modules/
 .dev.vars
 cloudflare-env.d.ts
 .DS_Store
-.private-context/
-.private-context-cache/
+.context/
+.context-cache/

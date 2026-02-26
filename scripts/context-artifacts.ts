@@ -2,15 +2,15 @@ import { createHash } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
 import { join, posix } from "node:path";
 import {
-	PRIVATE_CONTEXT_IMAGE_PREFIX,
-	PRIVATE_CONTEXT_INDEX_KEY,
-	PRIVATE_CONTEXT_MARKDOWN_PREFIX,
-	PRIVATE_CONTEXT_PREFIX,
+	CONTEXT_IMAGE_PREFIX,
+	CONTEXT_INDEX_KEY,
+	CONTEXT_MARKDOWN_PREFIX,
+	CONTEXT_PREFIX,
 } from "../src/constants";
 import type { ContextIndex } from "../src/context-index";
 import {
 	type ContextManifest,
-	PRIVATE_CONTEXT_DIR,
+	resolveContextRoot,
 	resolveManifestToolName,
 } from "./context-manifest";
 
@@ -60,7 +60,7 @@ function normalizeImageAssetKey(
 		.replaceAll(/--+/g, "-")
 		.replaceAll(/^-+|-+$/g, "");
 	const filename = `${safeBase || "image"}-${digest}${extension.toLowerCase()}`;
-	return `${PRIVATE_CONTEXT_IMAGE_PREFIX}/${filename}`;
+	return `${CONTEXT_IMAGE_PREFIX}/${filename}`;
 }
 
 export function buildArtifacts(
@@ -70,12 +70,12 @@ export function buildArtifacts(
 ): BuiltArtifacts {
 	const uploads: ContextUpload[] = [];
 	const tools: ContextIndex["tools"] = {};
-	const privateRoot = join(repoRoot, PRIVATE_CONTEXT_DIR);
+	const contextRoot = resolveContextRoot(repoRoot);
 
 	for (const entry of manifest.entries) {
 		const toolName = resolveManifestToolName(entry);
-		const markdownAbsolute = join(privateRoot, entry.markdownPath);
-		const markdownKey = `${PRIVATE_CONTEXT_MARKDOWN_PREFIX}/${entry.contextId}.md`;
+		const markdownAbsolute = join(contextRoot, entry.markdownPath);
+		const markdownKey = `${CONTEXT_MARKDOWN_PREFIX}/${entry.contextId}.md`;
 
 		uploads.push({
 			localPath: markdownAbsolute,
@@ -85,7 +85,7 @@ export function buildArtifacts(
 
 		const imageAssetKeys: string[] = [];
 		for (const imagePath of entry.imagePaths ?? []) {
-			const imageAbsolute = join(privateRoot, imagePath);
+			const imageAbsolute = join(contextRoot, imagePath);
 			const remoteKey = normalizeImageAssetKey(imagePath, imageAbsolute);
 			uploads.push({
 				localPath: imageAbsolute,
@@ -109,10 +109,7 @@ export function buildArtifacts(
 	}
 
 	const uniqueManagedKeys = Array.from(
-		new Set([
-			...uploads.map((upload) => upload.remoteKey),
-			PRIVATE_CONTEXT_INDEX_KEY,
-		]),
+		new Set([...uploads.map((upload) => upload.remoteKey), CONTEXT_INDEX_KEY]),
 	).sort((left, right) => left.localeCompare(right));
 
 	const index: ContextIndex = {
@@ -135,7 +132,7 @@ export function planMirrorDeletes(
 ): string[] {
 	const nextSet = new Set(nextManagedKeys);
 	return previousManagedKeys
-		.filter((key) => key.startsWith(`${PRIVATE_CONTEXT_PREFIX}/`))
+		.filter((key) => key.startsWith(`${CONTEXT_PREFIX}/`))
 		.filter((key) => !nextSet.has(key))
 		.sort((left, right) => left.localeCompare(right));
 }

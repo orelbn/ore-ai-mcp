@@ -7,11 +7,11 @@ export {
 export { parseSyncArgs } from "./context-cli";
 export {
 	buildContextToolName,
+	CONTEXT_DIR,
+	CONTEXT_MANIFEST,
 	type ContextManifest,
 	type ContextManifestEntry,
 	loadManifest,
-	PRIVATE_CONTEXT_DIR,
-	PRIVATE_CONTEXT_MANIFEST,
 	resolveManifestToolName,
 	type ValidationIssue,
 	validateManifest,

@@ -13,7 +13,7 @@ const baseEnv: Env = {
 	MCP_INTERNAL_SHARED_SECRET: "top-secret",
 	MCP_ALLOWED_CALLER: "ore-ai",
 	MCP_ENFORCE_CF_WORKER: "true",
-	PRIVATE_CONTEXT_BUCKET: createMockR2Bucket({}),
+	CONTEXT_BUCKET: createMockR2Bucket({}),
 };
 
 function makeRequest(headers: Record<string, string>): Request {

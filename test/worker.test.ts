@@ -9,7 +9,7 @@ const worker = createWorker();
 const env: Env = {
 	MCP_INTERNAL_SHARED_SECRET: "secret",
 	MCP_ALLOWED_CALLER: "ore-ai",
-	PRIVATE_CONTEXT_BUCKET: createMockR2Bucket({}),
+	CONTEXT_BUCKET: createMockR2Bucket({}),
 };
 
 describe("worker entrypoint", () => {

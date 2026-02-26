@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { PRIVATE_CONTEXT_INDEX_KEY } from "../src/constants";
+import { CONTEXT_INDEX_KEY } from "../src/constants";
 import type { AppError } from "../src/errors";
 import {
 	getContextByToolName,
@@ -14,7 +14,7 @@ function makeContext(bucket: R2Bucket): RequestContext {
 		env: {
 			MCP_INTERNAL_SHARED_SECRET: "secret",
 			MCP_ALLOWED_CALLER: "ore-ai",
-			PRIVATE_CONTEXT_BUCKET: bucket,
+			CONTEXT_BUCKET: bucket,
 		},
 		userId: "user_123",
 		requestId: "req_123",
@@ -29,8 +29,8 @@ describe("tool services", () => {
 			version: 1,
 			generatedAt: "2026-02-24T00:00:00.000Z",
 			managedKeys: [
-				PRIVATE_CONTEXT_INDEX_KEY,
-				"private-context/markdown/orel-top-coffee-shops.md",
+				CONTEXT_INDEX_KEY,
+				"context/markdown/orel-top-coffee-shops.md",
 			],
 			tools: {
 				[coffeeTool]: {
@@ -38,16 +38,16 @@ describe("tool services", () => {
 					title: "Orel Top Coffee Shops",
 					toolName: coffeeTool,
 					uiHint: "coffee-shops-markdown",
-					markdownKey: "private-context/markdown/orel-top-coffee-shops.md",
-					imageAssetKeys: ["private-context/images/coffee-1.jpg"],
+					markdownKey: "context/markdown/orel-top-coffee-shops.md",
+					imageAssetKeys: ["context/images/coffee-1.jpg"],
 					sourceUpdatedAt: "2026-02-23T12:00:00.000Z",
 				},
 			},
 		};
 
 		const bucket = createMockR2Bucket({
-			[PRIVATE_CONTEXT_INDEX_KEY]: JSON.stringify(index),
-			"private-context/markdown/orel-top-coffee-shops.md": "# Coffee notes",
+			[CONTEXT_INDEX_KEY]: JSON.stringify(index),
+			"context/markdown/orel-top-coffee-shops.md": "# Coffee notes",
 		});
 
 		const payload = await getContextByToolName(makeContext(bucket), coffeeTool);
@@ -56,9 +56,7 @@ describe("tool services", () => {
 		expect(payload.contextId).toBe("orel-top-coffee-shops");
 		expect(payload.title).toBe("Orel Top Coffee Shops");
 		expect(payload.markdown).toBe("# Coffee notes");
-		expect(payload.imageAssetKeys).toEqual([
-			"private-context/images/coffee-1.jpg",
-		]);
+		expect(payload.imageAssetKeys).toEqual(["context/images/coffee-1.jpg"]);
 		expect(payload.sourceUpdatedAt).toBe("2026-02-23T12:00:00.000Z");
 	});
 
@@ -74,12 +72,46 @@ describe("tool services", () => {
 		}
 	});
 
+	it("returns empty list when context index is missing", async () => {
+		const tools = await listContextToolEntries(
+			makeContext(createMockR2Bucket({})),
+		);
+		expect(tools).toEqual([]);
+	});
+
+	it("returns empty list when context index has invalid JSON", async () => {
+		const tools = await listContextToolEntries(
+			makeContext(
+				createMockR2Bucket({
+					[CONTEXT_INDEX_KEY]: "{ this is not valid json",
+				}),
+			),
+		);
+		expect(tools).toEqual([]);
+	});
+
+	it("returns empty list when context index does not match schema", async () => {
+		const tools = await listContextToolEntries(
+			makeContext(
+				createMockR2Bucket({
+					[CONTEXT_INDEX_KEY]: JSON.stringify({
+						version: 1,
+						generatedAt: "2026-02-24T00:00:00.000Z",
+						managedKeys: [],
+						tools: "not-an-object",
+					}),
+				}),
+			),
+		);
+		expect(tools).toEqual([]);
+	});
+
 	it("fails when tool mapping is missing", async () => {
 		const bucket = createMockR2Bucket({
-			[PRIVATE_CONTEXT_INDEX_KEY]: JSON.stringify({
+			[CONTEXT_INDEX_KEY]: JSON.stringify({
 				version: 1,
 				generatedAt: "2026-02-24T00:00:00.000Z",
-				managedKeys: [PRIVATE_CONTEXT_INDEX_KEY],
+				managedKeys: [CONTEXT_INDEX_KEY],
 				tools: {},
 			}),
 		});
@@ -97,13 +129,13 @@ describe("tool services", () => {
 		const index = {
 			version: 1,
 			generatedAt: "2026-02-24T00:00:00.000Z",
-			managedKeys: [PRIVATE_CONTEXT_INDEX_KEY],
+			managedKeys: [CONTEXT_INDEX_KEY],
 			tools: {
 				[coffeeTool]: {
 					contextId: "orel-top-coffee-shops",
 					title: "Orel Top Coffee Shops",
 					toolName: coffeeTool,
-					markdownKey: "private-context/markdown/orel-top-coffee-shops.md",
+					markdownKey: "context/markdown/orel-top-coffee-shops.md",
 					imageAssetKeys: [],
 					sourceUpdatedAt: "2026-02-23T12:00:00.000Z",
 				},
@@ -111,7 +143,7 @@ describe("tool services", () => {
 		};
 
 		const bucket = createMockR2Bucket({
-			[PRIVATE_CONTEXT_INDEX_KEY]: JSON.stringify(index),
+			[CONTEXT_INDEX_KEY]: JSON.stringify(index),
 		});
 
 		try {
@@ -124,16 +156,16 @@ describe("tool services", () => {
 
 	it("lists tools from index in stable name order", async () => {
 		const bucket = createMockR2Bucket({
-			[PRIVATE_CONTEXT_INDEX_KEY]: JSON.stringify({
+			[CONTEXT_INDEX_KEY]: JSON.stringify({
 				version: 1,
 				generatedAt: "2026-02-24T00:00:00.000Z",
-				managedKeys: [PRIVATE_CONTEXT_INDEX_KEY],
+				managedKeys: [CONTEXT_INDEX_KEY],
 				tools: {
 					"ore.context.b": {
 						contextId: "b",
 						title: "B",
 						toolName: "ore.context.b",
-						markdownKey: "private-context/markdown/b.md",
+						markdownKey: "context/markdown/b.md",
 						imageAssetKeys: [],
 						sourceUpdatedAt: "2026-02-23T12:00:00.000Z",
 					},
@@ -141,14 +173,14 @@ describe("tool services", () => {
 						contextId: "a",
 						title: "A",
 						toolName: "ore.context.a",
-						markdownKey: "private-context/markdown/a.md",
+						markdownKey: "context/markdown/a.md",
 						imageAssetKeys: [],
 						sourceUpdatedAt: "2026-02-23T12:00:00.000Z",
 					},
 				},
 			}),
-			"private-context/markdown/a.md": "# A",
-			"private-context/markdown/b.md": "# B",
+			"context/markdown/a.md": "# A",
+			"context/markdown/b.md": "# B",
 		});
 
 		const tools = await listContextToolEntries(makeContext(bucket));

@@ -1,17 +1,17 @@
 # ore-ai-mcp
 
-Private MCP server for Ore AI, deployed as a Cloudflare Worker and consumed by the Ore AI backend only.
+MCP server for Ore AI, deployed as a Cloudflare Worker and consumed by the Ore AI backend only.
 
 ## What this server does
 
 - Exposes MCP over Streamable HTTP at `/mcp`
 - Enforces internal auth headers and caller checks
-- Loads private context from R2 (not from Git or env payloads)
+- Loads context from R2 (not from Git or env payloads)
 - Supports dynamic runtime tool/schema discovery from consumers
 
 ## Dynamic tools
 
-- Tools are generated from `.private-context/context-manifest.json` entries.
+- Tools are generated from `.context/context-manifest.json` entries.
 - Default tool naming is automatic:
   - `toolName = ore.context.<contextId_slug>`
 - You can still override `toolName` per entry when needed.
@@ -22,20 +22,20 @@ Each generated tool returns raw markdown + metadata/image asset keys so the back
 ## Privacy model
 
 - Public repo stores only code and safe templates.
-- Real private context lives in `.private-context/` (gitignored) locally.
-- Local context is synced to private R2 objects.
+- Real context lives in `.context/` (gitignored) locally.
+- Local context is synced to R2 objects.
 - Worker reads R2 index + markdown at runtime.
 
-## Local private context layout
+## Local context layout
 
 ```text
-.private-context/
+.context/
   context-manifest.json
   notes/**/*.md
   images/**/*
 ```
 
-Safe starter templates are provided in `.private-context.example/`.
+Safe starter templates are provided in `.context.example/`.
 
 ## Required request headers
 
@@ -54,7 +54,7 @@ bun run dev
 ## Context commands
 
 ```bash
-# Validate local private context files
+# Validate local context files
 bun run context:validate
 
 # Preview sync to production

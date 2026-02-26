@@ -9,7 +9,7 @@ export interface Env {
 	MCP_ALLOWED_CALLER: string;
 	MCP_ENFORCE_CF_WORKER?: string;
 	MCP_DISABLED_TOOLS?: string;
-	PRIVATE_CONTEXT_BUCKET: R2Bucket;
+	CONTEXT_BUCKET: R2Bucket;
 }
 
 export interface AuthenticatedCaller {
@@ -22,7 +22,7 @@ export interface RequestContext extends AuthenticatedCaller {
 	env: Env;
 }
 
-export interface PrivateContextToolResult {
+export interface ContextToolResult {
 	uiHint: string;
 	toolName: string;
 	contextId: string;
