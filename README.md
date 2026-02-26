@@ -48,8 +48,16 @@ Safe starter templates are provided in `.context.example/`.
 ```bash
 bun install
 cp .dev.vars.example .dev.vars
+cp wrangler.jsonc.example wrangler.jsonc
+# edit wrangler.jsonc bucket names for your account
 bun run dev
 ```
+
+## Wrangler config convention
+
+- `wrangler.jsonc.example` is tracked as the safe template.
+- `wrangler.jsonc` is local and gitignored.
+- CI copies `wrangler.jsonc.example` to `wrangler.jsonc` before build.
 
 ## Context commands
 
@@ -57,7 +65,13 @@ bun run dev
 # Validate local context files
 bun run context:validate
 
-# Preview sync to production
+# Preview sync to dev (top-level r2_buckets)
+bun run context:sync --dry-run
+
+# Apply sync to dev
+bun run context:sync
+
+# Preview sync to production (env.production.r2_buckets)
 bun run context:sync --env production --dry-run
 
 # Apply sync to production

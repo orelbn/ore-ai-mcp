@@ -1,6 +1,7 @@
 node_modules/
 .bun/
 .wrangler/
+/wrangler.jsonc
 .dev.vars
 cloudflare-env.d.ts
 .DS_Store

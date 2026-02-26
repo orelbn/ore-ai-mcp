@@ -17,6 +17,6 @@
 		}
 	},
 	"files": {
-		"includes": ["**", "!cloudflare-env.d.ts"]
+		"includes": ["**", "!cloudflare-env.d.ts", "!.wrangler"]
 	}
 }

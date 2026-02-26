@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { CONTEXT_BUCKET_BINDING } from "../src/constants";
 import type { SyncArgs } from "./context-types";
@@ -29,6 +29,11 @@ export function resolveBucketName(
 	binding = CONTEXT_BUCKET_BINDING,
 ): string {
 	const configPath = join(repoRoot, "wrangler.jsonc");
+	if (!existsSync(configPath)) {
+		throw new Error(
+			"Missing wrangler.jsonc. Copy wrangler.jsonc.example to wrangler.jsonc and configure your bucket names first.",
+		);
+	}
 	const raw = readFileSync(configPath, "utf8");
 	const config = parseWranglerConfig(raw) as {
 		r2_buckets?: Array<{ binding: string; bucket_name: string }>;
