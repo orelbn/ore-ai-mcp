@@ -60,6 +60,8 @@ tests/
 - `errors.ts` or `errors/`: define explicit failures.
 - `index.ts`: expose the module's public API only.
 
+Treat `index.ts` as the only cross-module entrypoint by default. Keep `schema/`, `logic/`, `repo/`, `types/`, and `errors/` internal unless the module intentionally re-exports something stable.
+
 ## Scale By Splitting Folders
 
 When a concern grows, split it into a folder.
@@ -106,6 +108,8 @@ Use `lib/` for shared primitives and infrastructure. Use `modules/` for owned wo
 
 Use a module-level `index.ts` to define the public API.
 
+Keep the export interface as small as possible. Export the minimum surface other modules need, and prefer promoting fewer stable entrypoints over exposing internal building blocks.
+
 Export only what other modules should depend on:
 
 - public types
@@ -114,6 +118,8 @@ Export only what other modules should depend on:
 - stable constants
 
 Do not export private helpers or internal implementation details.
+
+Default to imports from another module's `index.ts`, not from its internal folders. If another module needs a symbol often enough to justify direct use, promote it into the public API deliberately instead of reaching inward.
 
 ## Optimize For Readability
 
