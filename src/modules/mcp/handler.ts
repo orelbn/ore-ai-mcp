@@ -1,4 +1,4 @@
-import { authenticateRequest, HEADER_REQUEST_ID } from "@/lib/auth";
+import { authenticateRequest, getRequestIdHeader } from "@/lib/auth";
 import { toHttpErrorResponse } from "@/lib/errors";
 import type { Env, RequestContext } from "@/lib/worker";
 import { MCP_ROUTE } from "./constants";
@@ -9,8 +9,7 @@ export async function handleMcpRequest(
 	env: Env,
 	ctx: ExecutionContext,
 ): Promise<Response> {
-	const fallbackRequestId =
-		request.headers.get(HEADER_REQUEST_ID) ?? crypto.randomUUID();
+	const fallbackRequestId = getRequestIdHeader(request) ?? crypto.randomUUID();
 
 	try {
 		const caller = authenticateRequest(request, env);

@@ -24,7 +24,7 @@ function makeContext(bucket: R2Bucket): RequestContext {
 
 describe("tool services", () => {
 	it("returns markdown and metadata from R2", async () => {
-		const coffeeTool = "ore.context.orel_top_coffee_shops";
+		const coffeeTool = "mcp.context.orel_top_coffee_shops";
 		const index = {
 			version: 1,
 			generatedAt: "2026-02-24T00:00:00.000Z",
@@ -64,7 +64,7 @@ describe("tool services", () => {
 		try {
 			await getContextByToolName(
 				makeContext(createMockR2Bucket({})),
-				"ore.context.orel_top_coffee_shops",
+				"mcp.context.orel_top_coffee_shops",
 			);
 			expect.unreachable();
 		} catch (error) {
@@ -117,7 +117,7 @@ describe("tool services", () => {
 		});
 
 		try {
-			await getContextByToolName(makeContext(bucket), "ore.context.unknown");
+			await getContextByToolName(makeContext(bucket), "mcp.context.unknown");
 			expect.unreachable();
 		} catch (error) {
 			expect((error as AppError).code).toBe("INTERNAL_ERROR");
@@ -125,7 +125,7 @@ describe("tool services", () => {
 	});
 
 	it("fails when markdown object is missing", async () => {
-		const coffeeTool = "ore.context.orel_top_coffee_shops";
+		const coffeeTool = "mcp.context.orel_top_coffee_shops";
 		const index = {
 			version: 1,
 			generatedAt: "2026-02-24T00:00:00.000Z",
@@ -161,18 +161,18 @@ describe("tool services", () => {
 				generatedAt: "2026-02-24T00:00:00.000Z",
 				managedKeys: [CONTEXT_INDEX_KEY],
 				tools: {
-					"ore.context.b": {
+					"mcp.context.b": {
 						contextId: "b",
 						title: "B",
-						toolName: "ore.context.b",
+						toolName: "mcp.context.b",
 						markdownKey: "context/markdown/b.md",
 						imageAssetKeys: [],
 						sourceUpdatedAt: "2026-02-23T12:00:00.000Z",
 					},
-					"ore.context.a": {
+					"mcp.context.a": {
 						contextId: "a",
 						title: "A",
-						toolName: "ore.context.a",
+						toolName: "mcp.context.a",
 						markdownKey: "context/markdown/a.md",
 						imageAssetKeys: [],
 						sourceUpdatedAt: "2026-02-23T12:00:00.000Z",
@@ -185,17 +185,17 @@ describe("tool services", () => {
 
 		const tools = await listContextToolEntries(makeContext(bucket));
 		expect(tools.map((tool) => tool.toolName)).toEqual([
-			"ore.context.a",
-			"ore.context.b",
+			"mcp.context.a",
+			"mcp.context.b",
 		]);
 	});
 
 	it("supports disabling specific tools by env var", () => {
 		const bucket = createMockR2Bucket({});
 		const context = makeContext(bucket);
-		context.env.MCP_DISABLED_TOOLS = "ore.context.orel_top_coffee_shops";
+		context.env.MCP_DISABLED_TOOLS = "mcp.context.orel_top_coffee_shops";
 		expect(
-			isToolDisabled(context.env, "ore.context.orel_top_coffee_shops"),
+			isToolDisabled(context.env, "mcp.context.orel_top_coffee_shops"),
 		).toBeTrue();
 		expect(isToolDisabled(context.env, "ore.some_other_tool")).toBeFalse();
 	});

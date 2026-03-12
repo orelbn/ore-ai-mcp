@@ -28,7 +28,7 @@ describe("context sync planning", () => {
 				title: "Hot Chocolates",
 				markdownPath: "notes/drinks/hot-chocolate.md",
 			}),
-		).toBe("ore.context.orel_favorite_hot_chocolates");
+		).toBe("mcp.context.orel_favorite_hot_chocolates");
 	});
 
 	it("fails validation when markdown file is missing", () => {
@@ -76,7 +76,7 @@ describe("context sync planning", () => {
 						{
 							contextId: "orel-top-coffee-shops",
 							title: "Orel Top Coffee Shops",
-							toolName: "ore.context.bad tool",
+							toolName: "mcp.context.bad tool",
 							markdownPath: "notes/coffee/top.md",
 						},
 					],
@@ -210,7 +210,7 @@ describe("context sync planning", () => {
 		);
 
 		expect(
-			artifacts.index.tools["ore.context.orel_top_coffee_shops"]?.markdownKey,
+			artifacts.index.tools["mcp.context.orel_top_coffee_shops"]?.markdownKey,
 		).toBe("context/markdown/orel-top-coffee-shops.md");
 		expect(artifacts.index.managedKeys.includes(CONTEXT_INDEX_KEY)).toBeTrue();
 		expect(artifacts.uploads.length).toBe(2);
@@ -233,7 +233,7 @@ describe("context sync planning", () => {
 						{
 							contextId: "orel-top-coffee-shops",
 							title: "Orel Top Coffee Shops",
-							toolName: "ore.context.custom_coffee",
+							toolName: "mcp.context.custom_coffee",
 							markdownPath: "notes/coffee/top.md",
 						},
 					],
@@ -250,7 +250,7 @@ describe("context sync planning", () => {
 			"2026-02-24T00:00:00.000Z",
 		);
 
-		expect(artifacts.index.tools["ore.context.custom_coffee"]?.contextId).toBe(
+		expect(artifacts.index.tools["mcp.context.custom_coffee"]?.contextId).toBe(
 			"orel-top-coffee-shops",
 		);
 

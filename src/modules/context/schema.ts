@@ -8,12 +8,12 @@ export const contextIndexToolEntrySchema = z.object({
 	uiHint: z.string().min(1).optional(),
 	markdownKey: z.string().min(1),
 	imageAssetKeys: z.array(z.string()),
-	sourceUpdatedAt: z.string().datetime({ offset: true }),
+	sourceUpdatedAt: z.iso.datetime({ offset: true }),
 });
 
 export const contextIndexSchema = z.object({
 	version: z.literal(1),
-	generatedAt: z.string().datetime({ offset: true }),
+	generatedAt: z.iso.datetime({ offset: true }),
 	managedKeys: z.array(z.string()),
 	tools: z.record(z.string(), contextIndexToolEntrySchema),
 });

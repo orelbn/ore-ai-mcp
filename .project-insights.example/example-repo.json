@@ -1,0 +1,22 @@
+{
+	"repo": "example-repo",
+	"summary": "Optional hand-curated summary for the project.",
+	"technologies": ["TypeScript", "Cloudflare Workers"],
+	"overview": "Optional high-level architecture note that should override generated copy.",
+	"components": [
+		{
+			"name": "Edge API",
+			"responsibility": "Handles public requests at the edge."
+		}
+	],
+	"designDecisions": [
+		{
+			"title": "Edge-first deployment",
+			"rationale": "Low-latency request handling is a key project requirement."
+		}
+	],
+	"diagramMermaid": "flowchart LR\n  Client[\"Client\"] --> Worker[\"Edge API\"]",
+	"notes": "Use this file for rationale or private context that the repo cannot reveal.",
+	"links": ["https://github.com/example/example-repo"],
+	"updatedAt": "2026-03-12T00:00:00.000Z"
+}

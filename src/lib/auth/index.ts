@@ -23,29 +23,54 @@ function timingSafeEqual(left: string, right: string): boolean {
 	return diff === 0;
 }
 
-function requiredHeader(request: Request, headerName: string): string {
-	const value = request.headers.get(headerName)?.trim();
+function firstHeaderValue(
+	request: Request,
+	headerNames: readonly string[],
+): string | null {
+	for (const headerName of headerNames) {
+		const value = request.headers.get(headerName)?.trim();
+		if (value) {
+			return value;
+		}
+	}
+	return null;
+}
+
+function requiredHeader(
+	request: Request,
+	headerNames: readonly string[],
+	primaryHeaderName: string,
+): string {
+	const value = firstHeaderValue(request, headerNames);
 	if (!value) {
 		throw new AppError(
 			"UNAUTHENTICATED",
-			`Missing required header: ${headerName}`,
+			`Missing required header: ${primaryHeaderName}`,
 			401,
 		);
 	}
 	return value;
 }
 
+export function getRequestIdHeader(request: Request): string | null {
+	return firstHeaderValue(request, [HEADER_REQUEST_ID]);
+}
+
 export function authenticateRequest(
 	request: Request,
 	env: Env,
 ): AuthenticatedCaller {
-	const suppliedSecret = requiredHeader(request, HEADER_INTERNAL_SECRET);
+	const suppliedSecret = requiredHeader(
+		request,
+		[HEADER_INTERNAL_SECRET],
+		HEADER_INTERNAL_SECRET,
+	);
 	if (!timingSafeEqual(suppliedSecret, env.MCP_INTERNAL_SHARED_SECRET)) {
 		throw new AppError("UNAUTHENTICATED", "Invalid internal secret", 401);
 	}
 
-	const userId = requiredHeader(request, HEADER_USER_ID);
-	const requestId = request.headers.get(HEADER_REQUEST_ID)?.trim();
+	const userId = requiredHeader(request, [HEADER_USER_ID], HEADER_USER_ID);
+	const requestId = getRequestIdHeader(request);
 	if (!requestId) {
 		throw new AppError(
 			"INVALID_INPUT",
