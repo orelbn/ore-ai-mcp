@@ -7,8 +7,18 @@ import {
 	isToolDisabled,
 	listContextToolEntries,
 } from "@/modules/context";
+import { registerGitHubTools } from "@/modules/github";
 import { executeTool } from "./execute-tool";
 
+const MCP_SERVER_NAME = "ore-ai-mcp";
+
+/**
+ * Build a CallToolResult representing a successful tool execution with a human-readable summary and merged structured payload.
+ *
+ * @param summary - Short text message to include in the result's content.
+ * @param payload - Additional key/value data to merge into `structuredContent` (merged alongside `ok: true`).
+ * @returns A `CallToolResult` whose `content` contains the provided `summary` and whose `structuredContent` contains `ok: true` plus the keys from `payload`.
+ */
 function toSuccessResult(summary: string, payload: unknown): CallToolResult {
 	return {
 		content: [
@@ -28,11 +38,17 @@ function shouldRegister(context: RequestContext, toolName: string): boolean {
 	return !isToolDisabled(context.env, toolName);
 }
 
+/**
+ * Creates and configures an MCP server for the application, registering available context tools and GitHub integrations.
+ *
+ * @param context - Request-scoped context used to discover, filter, and execute tool entries
+ * @returns An McpServer instance with discovered context tools (filtered by environment) and GitHub tools registered
+ */
 export async function createOreMcpServer(
 	context: RequestContext,
 ): Promise<McpServer> {
 	const server = new McpServer({
-		name: "Ore AI MCP",
+		name: MCP_SERVER_NAME,
 		version: "0.4.0",
 	});
 
@@ -57,6 +73,10 @@ export async function createOreMcpServer(
 				}),
 		);
 	}
+
+	registerGitHubTools(server, context, (toolName) =>
+		shouldRegister(context, toolName),
+	);
 
 	return server;
 }
