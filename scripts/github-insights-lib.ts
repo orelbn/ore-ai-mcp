@@ -83,6 +83,20 @@ export function buildProjectInsightOverrideIndex(
 	};
 }
 
+export function findDuplicateOverrideTargets(
+	overrides: LocalProjectOverride[],
+): string[] {
+	const counts = new Map<string, number>();
+	for (const override of overrides) {
+		counts.set(override.remoteKey, (counts.get(override.remoteKey) ?? 0) + 1);
+	}
+
+	return [...counts.entries()]
+		.filter(([, count]) => count > 1)
+		.map(([remoteKey]) => remoteKey)
+		.sort((left, right) => left.localeCompare(right));
+}
+
 export function planDeletedOverrideKeys(
 	previousManagedKeys: string[],
 	nextManagedKeys: string[],

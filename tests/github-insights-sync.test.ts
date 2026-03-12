@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
 	buildProjectInsightOverrideIndex,
 	buildProjectInsightSyncOperations,
+	findDuplicateOverrideTargets,
 	planDeletedOverrideKeys,
 } from "../scripts/github-insights-lib";
 
@@ -39,6 +40,23 @@ describe("github insights sync planning", () => {
 				["github-insights/v1/overrides/b.json"],
 			),
 		).toEqual(["github-insights/v1/overrides/a.json"]);
+	});
+
+	it("detects duplicate override targets", () => {
+		expect(
+			findDuplicateOverrideTargets([
+				{
+					filePath: "/tmp/a.json",
+					override: { repo: "repo-a" },
+					remoteKey: "github-insights/v1/overrides/repo-a.json",
+				},
+				{
+					filePath: "/tmp/b.json",
+					override: { repo: "repo-a" },
+					remoteKey: "github-insights/v1/overrides/repo-a.json",
+				},
+			]),
+		).toEqual(["github-insights/v1/overrides/repo-a.json"]);
 	});
 
 	it("places the override index upload after deletions", () => {

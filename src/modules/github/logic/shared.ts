@@ -377,7 +377,7 @@ export function buildHeuristicSummaryDraft(
 		name: source.repo.name,
 		summary: override?.summary ?? buildSummaryText(source, technologies),
 		technologies: override?.technologies ?? technologies,
-		evidence: withOverrideEvidence(buildEvidence(source), override),
+		evidence: buildEvidence(source),
 		provider: "heuristic",
 	};
 }
@@ -406,7 +406,7 @@ export function buildHeuristicArchitectureDraft(
 		components,
 		designDecisions,
 		diagramMermaid: override?.diagramMermaid ?? buildMermaidDiagram(components),
-		evidence: withOverrideEvidence(buildEvidence(source), override),
+		evidence: buildEvidence(source),
 		provider: "heuristic",
 	};
 }

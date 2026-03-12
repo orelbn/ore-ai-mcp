@@ -72,6 +72,17 @@ describe("registerGitHubTools", () => {
 		]);
 	});
 
+	it("respects shouldRegister for individual tools", async () => {
+		const server = new McpServer({ name: "test", version: "0.0.0" });
+		registerGitHubTools(server, createContext(), (toolName) => {
+			return toolName !== GITHUB_PROJECT_SUMMARY_TOOL;
+		});
+		expect(await listToolNames(server)).toEqual([
+			GITHUB_PROJECTS_LATEST_TOOL,
+			GITHUB_PROJECT_ARCHITECTURE_TOOL,
+		]);
+	});
+
 	it("skips registration when GitHub config is missing", async () => {
 		const server = new McpServer({ name: "test", version: "0.0.0" });
 		const context = createContext();

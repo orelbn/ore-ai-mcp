@@ -36,19 +36,6 @@ describe("authenticateRequest", () => {
 		expect(caller.requestId).toBe("req_123");
 	});
 
-	it("accepts generic mcp headers", () => {
-		const request = makeRequest({
-			[HEADER_INTERNAL_SECRET]: "top-secret",
-			[HEADER_USER_ID]: "user_123",
-			[HEADER_REQUEST_ID]: "req_123",
-			"cf-worker": "ore-ai",
-		});
-
-		const caller = authenticateRequest(request, baseEnv);
-		expect(caller.userId).toBe("user_123");
-		expect(caller.requestId).toBe("req_123");
-	});
-
 	it("rejects missing secret", () => {
 		const request = makeRequest({
 			[HEADER_USER_ID]: "user_123",

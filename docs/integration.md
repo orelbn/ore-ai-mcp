@@ -47,6 +47,10 @@ GitHub project insight tools use fixed names:
 - `github.project.summary`
 - `github.project.architecture`
 
+These tools are conditional. They are only registered when the deployment is
+configured for GitHub insights, so their absence from tool discovery is expected
+for deployments that have not enabled that feature.
+
 ## Tool output contract
 
 Each generated context tool returns structured content fields:

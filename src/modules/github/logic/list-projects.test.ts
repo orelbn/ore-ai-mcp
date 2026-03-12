@@ -3,15 +3,20 @@ import { createMockKVNamespace } from "@mocks/kv-namespace";
 import type { GitHubInsightsConfig } from "../types";
 import { getLatestProjects } from "./list-projects";
 
-const config: GitHubInsightsConfig = {
-	owner: "example",
-	cacheTtlSeconds: 43_200,
-	provider: "heuristic",
-	model: "gemini-3.1-flash-lite-preview",
-	githubToken: null,
-	geminiApiKey: null,
-	kv: createMockKVNamespace(),
-};
+function createConfig(
+	overrides: Partial<GitHubInsightsConfig> = {},
+): GitHubInsightsConfig {
+	return {
+		owner: "example",
+		cacheTtlSeconds: 43_200,
+		provider: "heuristic",
+		model: "gemini-3.1-flash-lite-preview",
+		githubToken: null,
+		geminiApiKey: null,
+		kv: createMockKVNamespace(),
+		...overrides,
+	};
+}
 
 const originalFetch = globalThis.fetch;
 
@@ -76,7 +81,7 @@ describe("getLatestProjects", () => {
 			);
 		}) as unknown as typeof fetch;
 
-		const result = await getLatestProjects(config);
+		const result = await getLatestProjects(createConfig());
 		expect(result.projects).toHaveLength(5);
 		expect(result.projects.map((project) => project.name)).not.toContain(
 			"forked",
@@ -87,7 +92,7 @@ describe("getLatestProjects", () => {
 
 	it("returns stale cached data when GitHub fails", async () => {
 		const staleConfig: GitHubInsightsConfig = {
-			...config,
+			...createConfig(),
 			kv: createMockKVNamespace({
 				"github-insights/v1/owners/example/latest.json": JSON.stringify({
 					owner: "example",
