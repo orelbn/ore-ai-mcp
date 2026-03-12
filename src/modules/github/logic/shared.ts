@@ -332,13 +332,19 @@ function buildMermaidDiagram(components: ProjectComponent[]): string {
 		return ["flowchart LR", '  Client["Client"]'].join("\n");
 	}
 
+	const escapeMermaidLabel = (value: string): string =>
+		value
+			.replaceAll("\\", "\\\\")
+			.replaceAll('"', '\\"')
+			.replaceAll(/[\r\n]+/g, " ");
+
 	const lines = [
 		"flowchart LR",
-		`  Client["Client"] --> C1["${components[0].name}"]`,
+		`  Client["Client"] --> C1["${escapeMermaidLabel(components[0].name)}"]`,
 	];
 	for (let index = 1; index < components.length; index++) {
 		lines.push(
-			`  C${index}["${components[index - 1].name}"] --> C${index + 1}["${components[index].name}"]`,
+			`  C${index}["${escapeMermaidLabel(components[index - 1].name)}"] --> C${index + 1}["${escapeMermaidLabel(components[index].name)}"]`,
 		);
 	}
 	return lines.join("\n");
@@ -433,12 +439,17 @@ export function applyArchitectureOverride(
 	if (!override) {
 		return draft;
 	}
+	const components = override.components ?? draft.components;
 	return {
 		...draft,
 		overview: override.overview ?? draft.overview,
-		components: override.components ?? draft.components,
+		components,
 		designDecisions: override.designDecisions ?? draft.designDecisions,
-		diagramMermaid: override.diagramMermaid ?? draft.diagramMermaid,
+		diagramMermaid:
+			override.diagramMermaid ??
+			(override.components
+				? buildMermaidDiagram(components)
+				: draft.diagramMermaid),
 		evidence: withOverrideEvidence(draft.evidence, override),
 	};
 }
@@ -453,15 +464,15 @@ export function requireRepoName(repo: string): string {
 		throw new AppError("INVALID_INPUT", "repo is required", 400);
 	}
 	if (trimmed.includes("/")) {
-		const [, repoName] = trimmed.split("/", 2);
-		if (!repoName) {
+		const parts = trimmed.split("/");
+		if (parts.length !== 2 || !parts[0] || !parts[1]) {
 			throw new AppError(
 				"INVALID_INPUT",
-				"repo must be a repository name",
+				"repo must be a repository name or <owner>/<repo>",
 				400,
 			);
 		}
-		return repoName;
+		return parts[1];
 	}
 	return trimmed;
 }

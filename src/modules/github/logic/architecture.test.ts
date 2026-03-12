@@ -166,4 +166,86 @@ describe("getProjectArchitecture", () => {
 		expect(result.components).toEqual([]);
 		expect(result.diagramMermaid).toBe('flowchart LR\n  Client["Client"]');
 	});
+
+	it("regenerates a valid mermaid diagram for overridden components", async () => {
+		const config = createConfig({
+			kv: createMockKVNamespace({
+				"github-insights/v1/overrides/repo-one.json": JSON.stringify({
+					repo: "repo-one",
+					components: [
+						{
+							name: 'API "Gateway"\nLayer',
+							responsibility: "Routes inbound requests.",
+						},
+						{
+							name: "Worker \\ Runtime",
+							responsibility: "Executes edge handlers.",
+						},
+					],
+				}),
+			}),
+		});
+
+		globalThis.fetch = mock(async (input) => {
+			const url = String(input);
+			if (url.endsWith("/repos/example/repo-one")) {
+				return Response.json({
+					name: "repo-one",
+					full_name: "example/repo-one",
+					html_url: "https://github.com/example/repo-one",
+					description: "A Cloudflare Worker app",
+					homepage: null,
+					language: "TypeScript",
+					topics: ["worker"],
+					stargazers_count: 12,
+					fork: false,
+					archived: false,
+					disabled: false,
+					pushed_at: "2026-03-10T00:00:00.000Z",
+					updated_at: "2026-03-10T00:00:00.000Z",
+					default_branch: "main",
+				});
+			}
+			if (url.endsWith("/repos/example/repo-one/readme")) {
+				return new Response(null, { status: 404 });
+			}
+			if (url.endsWith("/repos/example/repo-one/languages")) {
+				return Response.json({ TypeScript: 1000 });
+			}
+			if (url.endsWith("/repos/example/repo-one/contents")) {
+				return Response.json([]);
+			}
+			throw new Error(`Unexpected fetch URL: ${url}`);
+		}) as unknown as typeof fetch;
+
+		const result = await getProjectArchitecture(config, "repo-one");
+		expect(result.components).toEqual([
+			{
+				name: 'API "Gateway"\nLayer',
+				responsibility: "Routes inbound requests.",
+			},
+			{
+				name: "Worker \\ Runtime",
+				responsibility: "Executes edge handlers.",
+			},
+		]);
+		expect(result.diagramMermaid).toBe(
+			[
+				"flowchart LR",
+				'  Client["Client"] --> C1["API \\"Gateway\\" Layer"]',
+				'  C1["API \\"Gateway\\" Layer"] --> C2["Worker \\\\ Runtime"]',
+			].join("\n"),
+		);
+	});
+
+	it("rejects malformed owner repo paths", async () => {
+		await expect(
+			getProjectArchitecture(createConfig(), "example/repo-one/extra"),
+		).rejects.toEqual(
+			expect.objectContaining({
+				code: "INVALID_INPUT",
+				message: "repo must be a repository name or <owner>/<repo>",
+			}),
+		);
+	});
 });

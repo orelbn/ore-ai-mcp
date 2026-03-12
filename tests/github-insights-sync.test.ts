@@ -1,8 +1,12 @@
 import { describe, expect, it } from "bun:test";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
 	buildProjectInsightOverrideIndex,
 	buildProjectInsightSyncOperations,
 	findDuplicateOverrideTargets,
+	loadLocalProjectOverrides,
 	planDeletedOverrideKeys,
 } from "../scripts/github-insights-lib";
 
@@ -57,6 +61,28 @@ describe("github insights sync planning", () => {
 				},
 			]),
 		).toEqual(["github-insights/v1/overrides/repo-a.json"]);
+	});
+
+	it("rejects duplicate override targets while loading local files", () => {
+		const repoRoot = mkdtempSync(join(tmpdir(), "github-insights-"));
+		const overridesRoot = join(repoRoot, ".project-insights");
+		mkdirSync(overridesRoot);
+		writeFileSync(
+			join(overridesRoot, "a.json"),
+			JSON.stringify({ repo: "repo-a", summary: "one" }),
+		);
+		writeFileSync(
+			join(overridesRoot, "b.json"),
+			JSON.stringify({ repo: "repo-a", summary: "two" }),
+		);
+
+		try {
+			expect(() => loadLocalProjectOverrides(repoRoot)).toThrow(
+				"Duplicate override targets: github-insights/v1/overrides/repo-a.json",
+			);
+		} finally {
+			rmSync(repoRoot, { recursive: true, force: true });
+		}
 	});
 
 	it("places the override index upload after deletions", () => {

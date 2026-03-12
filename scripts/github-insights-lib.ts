@@ -42,7 +42,7 @@ export function loadLocalProjectOverrides(
 		return [];
 	}
 
-	return readdirSync(root)
+	const overrides = readdirSync(root)
 		.filter((entry) => entry.toLowerCase().endsWith(".json"))
 		.sort((left, right) => left.localeCompare(right))
 		.map((entry) => {
@@ -70,6 +70,26 @@ export function loadLocalProjectOverrides(
 				remoteKey: projectOverrideKey(parsed.data.repo),
 			};
 		});
+
+	const duplicatePathsByRemoteKey = new Map<string, string[]>();
+	for (const override of overrides) {
+		const nextPaths = duplicatePathsByRemoteKey.get(override.remoteKey) ?? [];
+		nextPaths.push(override.filePath);
+		duplicatePathsByRemoteKey.set(override.remoteKey, nextPaths);
+	}
+
+	const duplicateTargets = [...duplicatePathsByRemoteKey.entries()]
+		.filter(([, filePaths]) => filePaths.length > 1)
+		.map(([remoteKey, filePaths]) => `${remoteKey} (${filePaths.join(", ")})`)
+		.sort((left, right) => left.localeCompare(right));
+
+	if (duplicateTargets.length > 0) {
+		throw new Error(
+			`Duplicate override targets: ${duplicateTargets.join("; ")}`,
+		);
+	}
+
+	return overrides;
 }
 
 export function buildProjectInsightOverrideIndex(
