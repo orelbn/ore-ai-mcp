@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { HEADER_REQUEST_ID } from "@/lib/auth";
-import { createWorker } from "@/index";
-import type { Env } from "@/lib/worker";
 import { createMockR2Bucket } from "@mocks/r2-bucket";
+import { createWorker } from "@/index";
+import { HEADER_REQUEST_ID } from "@/lib/auth";
+import type { Env } from "@/lib/worker";
 
 const worker = createWorker();
 

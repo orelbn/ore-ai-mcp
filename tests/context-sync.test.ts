@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { CONTEXT_INDEX_KEY } from "@/modules/context";
 import {
 	buildArtifacts,
 	loadManifest,
@@ -9,7 +10,6 @@ import {
 	resolveManifestToolName,
 	validateManifest,
 } from "../scripts/context-lib";
-import { CONTEXT_INDEX_KEY } from "@/modules/context";
 
 function makeTempRepo(): string {
 	const repoRoot = mkdtempSync(join(tmpdir(), "ore-ai-context-test-"));

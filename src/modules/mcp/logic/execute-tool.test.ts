@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import type { RequestContext } from "@/lib/worker";
 import { createMockR2Bucket } from "@mocks/r2-bucket";
+import type { RequestContext } from "@/lib/worker";
 import { executeTool } from "./execute-tool";
 
 const context: RequestContext = {

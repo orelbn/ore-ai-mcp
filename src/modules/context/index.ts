@@ -6,13 +6,13 @@ export {
 	CONTEXT_PREFIX,
 	CONTEXT_TOOL_PREFIX,
 } from "./constants";
-export { contextIndexSchema } from "./schema";
 export {
 	getContextByToolEntry,
 	getContextByToolName,
 	isToolDisabled,
 	listContextToolEntries,
 } from "./logic/tools";
+export { contextIndexSchema } from "./schema";
 export type {
 	ContextIndex,
 	ContextIndexToolEntry,
