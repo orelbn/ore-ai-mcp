@@ -5,6 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "wrangler dev",
+		"hooks:install": "git config core.hooksPath .githooks",
 		"typecheck": "tsgo --noEmit",
 		"lint": "biome check .",
 		"format": "biome format --write .",
