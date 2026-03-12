@@ -7,7 +7,10 @@ import {
 	isToolDisabled,
 	listContextToolEntries,
 } from "@/modules/context";
+import { registerGitHubTools } from "@/modules/github";
 import { executeTool } from "./execute-tool";
+
+const MCP_SERVER_NAME = "ore-ai-mcp";
 
 function toSuccessResult(summary: string, payload: unknown): CallToolResult {
 	return {
@@ -32,7 +35,7 @@ export async function createOreMcpServer(
 	context: RequestContext,
 ): Promise<McpServer> {
 	const server = new McpServer({
-		name: "Ore AI MCP",
+		name: MCP_SERVER_NAME,
 		version: "0.4.0",
 	});
 
@@ -57,6 +60,10 @@ export async function createOreMcpServer(
 				}),
 		);
 	}
+
+	registerGitHubTools(server, context, (toolName) =>
+		shouldRegister(context, toolName),
+	);
 
 	return server;
 }

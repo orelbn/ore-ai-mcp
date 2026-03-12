@@ -30,7 +30,7 @@ Sync runs in mirror mode:
 2. Run sync to target environment.
 3. Confirm object key is no longer present through tool output behavior.
 4. If needed, disable tool quickly via env var:
-   - `MCP_DISABLED_TOOLS="ore.context.orel_top_coffee_shops"`
+   - `MCP_DISABLED_TOOLS="mcp.context.example_note,github.project.summary"`
 
 ## Rollback
 
@@ -39,4 +39,5 @@ Sync runs in mirror mode:
 3. Re-run smoke tests:
    - initialize handshake
    - list tools
-   - call one `ore.context.*` tool
+   - call one `mcp.context.*` tool
+   - call one `github.project.summary` tool when GitHub insights are configured

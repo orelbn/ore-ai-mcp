@@ -18,7 +18,7 @@ describe("executeTool", () => {
 	it("returns INTERNAL_ERROR envelope when handler throws", async () => {
 		const result = await executeTool(
 			context,
-			"ore.context.sample_context",
+			"mcp.context.sample_context",
 			async () => {
 				throw new Error("context unavailable");
 			},

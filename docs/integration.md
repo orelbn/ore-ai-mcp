@@ -1,6 +1,6 @@
-# Dynamic Discovery Integration (Ore AI Backend)
+# Dynamic Discovery Integration
 
-This MCP server is consumed from the Ore AI backend using AI SDK runtime discovery.
+This MCP server is consumed over Streamable HTTP and supports AI SDK runtime discovery.
 
 ## Consumer pattern
 
@@ -17,11 +17,11 @@ import { createMCPClient } from "@ai-sdk/mcp";
 const mcpClient = await createMCPClient({
 	transport: {
 		type: "http",
-		url: "https://ore-ai-mcp.example.com/mcp",
+		url: "https://your-mcp.example.com/mcp",
 		headers: {
-			"x-ore-internal-secret": process.env.MCP_INTERNAL_SHARED_SECRET!,
-			"x-ore-user-id": userId,
-			"x-ore-request-id": requestId,
+			"x-mcp-internal-secret": process.env.MCP_INTERNAL_SHARED_SECRET!,
+			"x-mcp-user-id": userId,
+			"x-mcp-request-id": requestId,
 		},
 	},
 });
@@ -38,8 +38,14 @@ try {
 
 - Tools are discovered dynamically from MCP at runtime.
 - Tool names are generated from manifest entries:
-  - `ore.context.<contextId_slug>` by default.
+  - `mcp.context.<contextId_slug>` by default.
 - Consumers should filter the discovered tool set with an allowlist/prefix strategy.
+
+GitHub project insight tools use fixed names:
+
+- `github.projects.latest`
+- `github.project.summary`
+- `github.project.architecture`
 
 ## Tool output contract
 
@@ -54,8 +60,41 @@ Each generated context tool returns structured content fields:
 - `imageAssetKeys`
 - `sourceUpdatedAt`
 
+GitHub tools return structured content fields:
+
+- `ok`
+- `provider`
+- `cachedAt`
+- `sourceUpdatedAt`
+- `stale`
+
+`github.projects.latest` returns:
+
+- `owner`
+- `projects`
+
+`github.project.summary` returns:
+
+- `repo`
+- `name`
+- `summary`
+- `technologies`
+- `evidence`
+
+`github.project.architecture` returns:
+
+- `repo`
+- `overview`
+- `components`
+- `designDecisions`
+- `diagramMermaid`
+- `evidence`
+
 ## UI mapping
 
-- `ore.context.*` -> local context/image renderer(s).
+- `mcp.context.*` -> local context/image renderer(s).
+- `github.projects.latest` -> project list renderer.
+- `github.project.summary` -> summary + technologies renderer.
+- `github.project.architecture` -> architecture/diagram renderer.
 - Unknown tool names -> generic fallback renderer.
 - `imageAssetKeys` are object keys; app proxy is responsible for secure streaming.

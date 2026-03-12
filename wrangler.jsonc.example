@@ -13,6 +13,12 @@
 	"observability": {
 		"enabled": true
 	},
+	"kv_namespaces": [
+		{
+			"binding": "PROJECT_INSIGHTS_KV",
+			"id": "your-project-insights-kv-dev"
+		}
+	],
 	"r2_buckets": [
 		{
 			"binding": "CONTEXT_BUCKET",
@@ -21,9 +27,13 @@
 		}
 	],
 	"vars": {
-		"MCP_ALLOWED_CALLER": "ore-ai",
+		"MCP_ALLOWED_CALLER": "mcp-client",
 		"MCP_ENFORCE_CF_WORKER": "false",
-		"MCP_DISABLED_TOOLS": ""
+		"MCP_DISABLED_TOOLS": "",
+		"GITHUB_OWNER": "your-github-username",
+		"GITHUB_CACHE_TTL_SECONDS": "43200",
+		"GITHUB_INSIGHTS_PROVIDER": "google",
+		"GITHUB_INSIGHTS_MODEL": "gemini-3.1-flash-lite-preview"
 	},
 	"env": {
 		"production": {
@@ -31,6 +41,12 @@
 			"observability": {
 				"enabled": true
 			},
+			"kv_namespaces": [
+				{
+					"binding": "PROJECT_INSIGHTS_KV",
+					"id": "your-project-insights-kv-production"
+				}
+			],
 			"r2_buckets": [
 				{
 					"binding": "CONTEXT_BUCKET",
@@ -39,9 +55,13 @@
 				}
 			],
 			"vars": {
-				"MCP_ALLOWED_CALLER": "ore-ai",
+				"MCP_ALLOWED_CALLER": "mcp-client",
 				"MCP_ENFORCE_CF_WORKER": "true",
-				"MCP_DISABLED_TOOLS": ""
+				"MCP_DISABLED_TOOLS": "",
+				"GITHUB_OWNER": "your-github-username",
+				"GITHUB_CACHE_TTL_SECONDS": "43200",
+				"GITHUB_INSIGHTS_PROVIDER": "google",
+				"GITHUB_INSIGHTS_MODEL": "gemini-3.1-flash-lite-preview"
 			}
 		}
 	}
