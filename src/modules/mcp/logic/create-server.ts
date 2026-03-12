@@ -1,13 +1,13 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { executeTool } from "./tool-runner";
 import {
 	getContextByToolEntry,
 	isToolDisabled,
 	listContextToolEntries,
-} from "./tool-services";
-import type { RequestContext } from "./types";
+} from "@/modules/context";
+import type { RequestContext } from "@/lib/worker";
+import { executeTool } from "./execute-tool";
 
 function toSuccessResult(summary: string, payload: unknown): CallToolResult {
 	return {

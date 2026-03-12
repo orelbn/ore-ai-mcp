@@ -4,30 +4,20 @@ export type ErrorCode =
 	| "INVALID_INPUT"
 	| "INTERNAL_ERROR";
 
-export interface Env {
+export type Env = {
 	MCP_INTERNAL_SHARED_SECRET: string;
 	MCP_ALLOWED_CALLER: string;
 	MCP_ENFORCE_CF_WORKER?: string;
 	MCP_DISABLED_TOOLS?: string;
 	CONTEXT_BUCKET: R2Bucket;
-}
+};
 
-export interface AuthenticatedCaller {
+export type AuthenticatedCaller = {
 	userId: string;
 	requestId: string;
 	callerWorker: string | null;
-}
+};
 
-export interface RequestContext extends AuthenticatedCaller {
+export type RequestContext = AuthenticatedCaller & {
 	env: Env;
-}
-
-export interface ContextToolResult {
-	uiHint: string;
-	toolName: string;
-	contextId: string;
-	title: string;
-	markdown: string;
-	imageAssetKeys: string[];
-	sourceUpdatedAt: string;
-}
+};

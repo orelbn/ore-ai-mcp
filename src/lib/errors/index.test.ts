@@ -4,7 +4,7 @@ import {
 	normalizeError,
 	toHttpErrorResponse,
 	toToolErrorResult,
-} from "../src/errors";
+} from "./index";
 
 describe("error handling", () => {
 	it("sanitizes INTERNAL_ERROR in tool responses", () => {

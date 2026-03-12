@@ -17,6 +17,3 @@ export const contextIndexSchema = z.object({
 	managedKeys: z.array(z.string()),
 	tools: z.record(z.string(), contextIndexToolEntrySchema),
 });
-
-export type ContextIndex = z.infer<typeof contextIndexSchema>;
-export type ContextIndexToolEntry = z.infer<typeof contextIndexToolEntrySchema>;

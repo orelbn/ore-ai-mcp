@@ -1,13 +1,13 @@
 import { describe, expect, it } from "bun:test";
-import { authenticateRequest } from "../src/auth";
+import { authenticateRequest } from "./index";
 import {
 	HEADER_INTERNAL_SECRET,
 	HEADER_REQUEST_ID,
 	HEADER_USER_ID,
-} from "../src/constants";
-import { AppError } from "../src/errors";
-import type { Env } from "../src/types";
-import { createMockR2Bucket } from "./r2-mock";
+} from "./index";
+import { AppError } from "../errors";
+import type { Env } from "../worker";
+import { createMockR2Bucket } from "@mocks/r2-bucket";
 
 const baseEnv: Env = {
 	MCP_INTERNAL_SHARED_SECRET: "top-secret",

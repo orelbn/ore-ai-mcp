@@ -1,7 +1,7 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { normalizeError, toToolErrorResult } from "./errors";
-import { logToolEvent } from "./logging";
-import type { RequestContext } from "./types";
+import { normalizeError, toToolErrorResult } from "@/lib/errors";
+import { logToolEvent } from "@/lib/logging";
+import type { RequestContext } from "@/lib/worker";
 
 export async function executeTool(
 	context: RequestContext,

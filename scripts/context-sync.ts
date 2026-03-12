@@ -1,8 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONTEXT_INDEX_KEY } from "../src/constants";
-import { contextIndexSchema } from "../src/context-index";
+import { CONTEXT_INDEX_KEY, contextIndexSchema } from "@/modules/context";
 import {
 	buildArtifacts,
 	buildR2CommandForDelete,

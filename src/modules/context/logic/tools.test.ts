@@ -1,13 +1,13 @@
 import { describe, expect, it } from "bun:test";
-import { CONTEXT_INDEX_KEY } from "../src/constants";
-import type { AppError } from "../src/errors";
+import { AppError } from "@/lib/errors";
+import type { RequestContext } from "@/lib/worker";
+import { createMockR2Bucket } from "@mocks/r2-bucket";
 import {
+	CONTEXT_INDEX_KEY,
 	getContextByToolName,
 	isToolDisabled,
 	listContextToolEntries,
-} from "../src/tool-services";
-import type { RequestContext } from "../src/types";
-import { createMockR2Bucket } from "./r2-mock";
+} from "../index";
 
 function makeContext(bucket: R2Bucket): RequestContext {
 	return {

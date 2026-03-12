@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { z } from "zod";
-import { CONTEXT_TOOL_PREFIX } from "../src/constants";
+import { CONTEXT_TOOL_PREFIX } from "@/modules/context";
 
 export const CONTEXT_DIR = ".context";
 export const CONTEXT_MANIFEST = "context-manifest.json";

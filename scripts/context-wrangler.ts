@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { CONTEXT_BUCKET_BINDING } from "../src/constants";
+import { CONTEXT_BUCKET_BINDING } from "@/modules/context";
 import type { SyncArgs } from "./context-types";
 
 function stripComments(jsonc: string): string {

@@ -3,11 +3,20 @@
 		"target": "ESNext",
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
+		"paths": {
+			"@/*": ["./src/*"],
+			"@mocks/*": ["./mocks/*"]
+		},
 		"strict": true,
 		"skipLibCheck": true,
 		"noEmit": true,
 		"types": ["@cloudflare/workers-types", "node", "bun-types"],
 		"lib": ["ESNext"]
 	},
-	"include": ["src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"]
+	"include": [
+		"src/**/*.ts",
+		"scripts/**/*.ts",
+		"tests/**/*.ts",
+		"mocks/**/*.ts"
+	]
 }

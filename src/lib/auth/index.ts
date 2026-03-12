@@ -1,11 +1,11 @@
+import { AppError } from "@/lib/errors";
+import type { AuthenticatedCaller, Env } from "@/lib/worker";
 import {
 	HEADER_CF_WORKER,
 	HEADER_INTERNAL_SECRET,
 	HEADER_REQUEST_ID,
 	HEADER_USER_ID,
 } from "./constants";
-import { AppError } from "./errors";
-import type { AuthenticatedCaller, Env } from "./types";
 
 function timingSafeEqual(left: string, right: string): boolean {
 	const leftBytes = new TextEncoder().encode(left);
@@ -71,3 +71,10 @@ export function authenticateRequest(
 		callerWorker,
 	};
 }
+
+export {
+	HEADER_CF_WORKER,
+	HEADER_INTERNAL_SECRET,
+	HEADER_REQUEST_ID,
+	HEADER_USER_ID,
+} from "./constants";

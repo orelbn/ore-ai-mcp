@@ -1,5 +1,5 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import type { ErrorCode } from "./types";
+import type { ErrorCode } from "@/lib/worker";
 
 export class AppError extends Error {
 	code: ErrorCode;

@@ -9,7 +9,7 @@ import {
 	resolveManifestToolName,
 	validateManifest,
 } from "../scripts/context-lib";
-import { CONTEXT_INDEX_KEY } from "../src/constants";
+import { CONTEXT_INDEX_KEY } from "@/modules/context";
 
 function makeTempRepo(): string {
 	const repoRoot = mkdtempSync(join(tmpdir(), "ore-ai-context-test-"));

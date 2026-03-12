@@ -1,11 +1,11 @@
-import type { ErrorCode, RequestContext } from "./types";
+import type { ErrorCode, RequestContext } from "@/lib/worker";
 
-interface ToolLogEvent {
+type ToolLogEvent = {
 	toolName: string;
 	status: "success" | "error";
 	latencyMs: number;
 	errorCode?: ErrorCode;
-}
+};
 
 async function hashUserId(userId: string): Promise<string> {
 	const digest = await crypto.subtle.digest(

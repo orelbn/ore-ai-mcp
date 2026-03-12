@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { executeTool } from "../src/tool-runner";
-import type { RequestContext } from "../src/types";
-import { createMockR2Bucket } from "./r2-mock";
+import type { RequestContext } from "@/lib/worker";
+import { createMockR2Bucket } from "@mocks/r2-bucket";
+import { executeTool } from "./execute-tool";
 
 const context: RequestContext = {
 	env: {

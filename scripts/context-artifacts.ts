@@ -6,8 +6,8 @@ import {
 	CONTEXT_INDEX_KEY,
 	CONTEXT_MARKDOWN_PREFIX,
 	CONTEXT_PREFIX,
-} from "../src/constants";
-import type { ContextIndex } from "../src/context-index";
+	type ContextIndex,
+} from "@/modules/context";
 import {
 	type ContextManifest,
 	resolveContextRoot,
