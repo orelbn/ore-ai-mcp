@@ -31,6 +31,10 @@ Sync runs in mirror mode:
 3. Confirm object key is no longer present through tool output behavior.
 4. If needed, disable tool quickly via env var:
    - `MCP_DISABLED_TOOLS="ore.context.orel_top_coffee_shops"`
+5. For runtime-only operational changes, call `ore.server.manage` with:
+   - `action: "status"` to inspect current disabled sources
+   - `action: "disable-tools"` / `action: "enable-tools"` to update R2-backed overrides
+   - `action: "clear-overrides"` to remove all runtime overrides
 
 ## Rollback
 

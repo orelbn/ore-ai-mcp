@@ -4,9 +4,14 @@ import { z } from "zod";
 import type { RequestContext } from "@/lib/worker";
 import {
 	getContextByToolEntry,
-	isToolDisabled,
-	listContextToolEntries,
+	getContextToolInventory,
 } from "@/modules/context";
+import {
+	MCP_SERVER_ADMIN_TOOL,
+	ORE_MCP_SERVER_NAME,
+	ORE_MCP_SERVER_VERSION,
+} from "../constants";
+import { adminToolInputSchema, handleAdminTool } from "./admin-tool";
 import { executeTool } from "./execute-tool";
 
 function toSuccessResult(summary: string, payload: unknown): CallToolResult {
@@ -24,21 +29,30 @@ function toSuccessResult(summary: string, payload: unknown): CallToolResult {
 	};
 }
 
-function shouldRegister(context: RequestContext, toolName: string): boolean {
-	return !isToolDisabled(context.env, toolName);
-}
-
 export async function createOreMcpServer(
 	context: RequestContext,
 ): Promise<McpServer> {
 	const server = new McpServer({
-		name: "Ore AI MCP",
-		version: "0.4.0",
+		name: ORE_MCP_SERVER_NAME,
+		version: ORE_MCP_SERVER_VERSION,
 	});
 
-	const toolEntries = await listContextToolEntries(context);
-	for (const toolEntry of toolEntries) {
-		if (!shouldRegister(context, toolEntry.toolName)) {
+	server.registerTool(
+		MCP_SERVER_ADMIN_TOOL,
+		{
+			description:
+				"Inspect the live MCP server and manage runtime disabled-tool overrides.",
+			inputSchema: adminToolInputSchema,
+		},
+		async (args) =>
+			executeTool(context, MCP_SERVER_ADMIN_TOOL, async () =>
+				handleAdminTool(context, args),
+			),
+	);
+
+	const toolInventory = await getContextToolInventory(context);
+	for (const toolEntry of toolInventory.tools) {
+		if (toolEntry.isDisabled) {
 			continue;
 		}
 

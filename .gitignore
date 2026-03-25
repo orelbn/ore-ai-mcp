@@ -7,3 +7,4 @@ cloudflare-env.d.ts
 .DS_Store
 .context/
 .context-cache/
+internal/local-mcp-dev/ui/dist/

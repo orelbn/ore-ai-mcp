@@ -3,6 +3,7 @@
 		"target": "ESNext",
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
+		"jsx": "react-jsx",
 		"paths": {
 			"@/*": ["./src/*"],
 			"@mocks/*": ["./mocks/*"]
@@ -11,9 +12,12 @@
 		"skipLibCheck": true,
 		"noEmit": true,
 		"types": ["@cloudflare/workers-types", "node", "bun-types"],
-		"lib": ["ESNext"]
+		"lib": ["ESNext", "DOM", "DOM.Iterable"]
 	},
 	"include": [
+		"internal/**/*.d.ts",
+		"internal/**/*.ts",
+		"internal/**/*.tsx",
 		"src/**/*.ts",
 		"scripts/**/*.ts",
 		"tests/**/*.ts",

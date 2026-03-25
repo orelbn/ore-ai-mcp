@@ -1,8 +1,8 @@
 import { AppError } from "@/lib/errors";
 import type { RequestContext } from "@/lib/worker";
-import { CONTEXT_INDEX_KEY } from "../constants";
-import { contextIndexSchema } from "../schema";
-import type { ContextIndex } from "../types";
+import { CONTEXT_INDEX_KEY, CONTEXT_SERVER_CONFIG_KEY } from "../constants";
+import { contextIndexSchema, contextServerConfigSchema } from "../schema";
+import type { ContextIndex, ContextServerConfig } from "../types";
 
 function createEmptyContextIndex(): ContextIndex {
 	return {
@@ -10,6 +10,14 @@ function createEmptyContextIndex(): ContextIndex {
 		generatedAt: new Date().toISOString(),
 		managedKeys: [],
 		tools: {},
+	};
+}
+
+function createEmptyContextServerConfig(): ContextServerConfig {
+	return {
+		version: 1,
+		updatedAt: new Date().toISOString(),
+		disabledTools: [],
 	};
 }
 
@@ -23,6 +31,23 @@ function warnContextIndexFallback(
 			scope: "context_repo",
 			level: "warn",
 			message: "context index unavailable, no tools registered",
+			requestId: context.requestId,
+			reason,
+			error,
+		}),
+	);
+}
+
+function warnServerConfigFallback(
+	context: RequestContext,
+	reason: string,
+	error?: string,
+) {
+	console.warn(
+		JSON.stringify({
+			scope: "context_repo",
+			level: "warn",
+			message: "mcp server config unavailable, using defaults",
 			requestId: context.requestId,
 			reason,
 			error,
@@ -87,4 +112,54 @@ export async function loadContextMarkdown(
 	}
 
 	return markdownObject.text();
+}
+
+export async function loadContextServerConfig(
+	context: RequestContext,
+): Promise<ContextServerConfig> {
+	const configObject = await context.env.CONTEXT_BUCKET.get(
+		CONTEXT_SERVER_CONFIG_KEY,
+	);
+	if (!configObject) {
+		return createEmptyContextServerConfig();
+	}
+
+	let rawConfig: unknown;
+	try {
+		rawConfig = JSON.parse(await configObject.text());
+	} catch {
+		warnServerConfigFallback(
+			context,
+			"invalid_server_config_json",
+			`R2 object has invalid JSON: ${CONTEXT_SERVER_CONFIG_KEY}`,
+		);
+		return createEmptyContextServerConfig();
+	}
+
+	const parsed = contextServerConfigSchema.safeParse(rawConfig);
+	if (!parsed.success) {
+		warnServerConfigFallback(
+			context,
+			"invalid_server_config_schema",
+			parsed.error.issues
+				.map((issue) => {
+					const path = issue.path.length > 0 ? issue.path.join(".") : "<root>";
+					return `${path}: ${issue.message}`;
+				})
+				.join("; "),
+		);
+		return createEmptyContextServerConfig();
+	}
+
+	return parsed.data;
+}
+
+export async function saveContextServerConfig(
+	context: RequestContext,
+	config: ContextServerConfig,
+): Promise<void> {
+	await context.env.CONTEXT_BUCKET.put(
+		CONTEXT_SERVER_CONFIG_KEY,
+		JSON.stringify(config),
+	);
 }

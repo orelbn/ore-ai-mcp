@@ -17,3 +17,9 @@ export const contextIndexSchema = z.object({
 	managedKeys: z.array(z.string()),
 	tools: z.record(z.string(), contextIndexToolEntrySchema),
 });
+
+export const contextServerConfigSchema = z.object({
+	version: z.literal(1),
+	updatedAt: z.string().datetime({ offset: true }),
+	disabledTools: z.array(z.string().min(1)),
+});

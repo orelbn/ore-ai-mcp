@@ -16,6 +16,8 @@ MCP server for Ore AI, deployed as a Cloudflare Worker and consumed by the Ore A
   - `toolName = ore.context.<contextId_slug>`
 - You can still override `toolName` per entry when needed.
   - Explicit names must match `[a-z0-9._-]`.
+- The server also exposes one built-in internal tool:
+  - `ore.server.manage` for inspecting the live registry and managing runtime disabled-tool overrides stored in R2.
 
 Each generated tool returns raw markdown + metadata/image asset keys so the backend AI can format the final output.
 
@@ -52,6 +54,40 @@ cp wrangler.jsonc.example wrangler.jsonc
 # edit wrangler.jsonc bucket names for your account
 bun run dev
 ```
+
+Husky installs the repo's Git hooks from the `prepare` script during `bun install`.
+
+## Local MCP Dev UI
+
+Run the local-only dashboard:
+
+```bash
+bun run tool:dev
+```
+
+Then open `http://127.0.0.1:4317`.
+
+The UI is local-dev only:
+
+- it reads `MCP_INTERNAL_SHARED_SECRET` from `.dev.vars`
+- it auto-detects the local MCP URL when possible
+- secrets never need to be typed into the browser
+- the frontend is built with React + Vite before the local Bun server starts
+
+If you are iterating on the UI itself, run these in separate terminals:
+
+```bash
+bun run tool:api
+bun run tool:ui
+```
+
+Then open the Vite URL it prints, which proxies `/api/*` back to the local Bun server.
+
+Useful env vars:
+
+- `INTERNAL_MCP_LOCAL_URL` defaults to `http://127.0.0.1:8787/mcp`
+- `INTERNAL_MCP_LOCAL_SECRET` to override `.dev.vars` if needed
+- `INTERNAL_MCP_ADMIN_PORT` defaults to `4317`
 
 ## Wrangler config convention
 
