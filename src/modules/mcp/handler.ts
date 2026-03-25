@@ -1,13 +1,28 @@
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { authenticateRequest, HEADER_REQUEST_ID } from "@/lib/auth";
 import { toHttpErrorResponse } from "@/lib/errors";
 import type { Env, RequestContext } from "@/lib/worker";
-import { MCP_ROUTE } from "./constants";
 import { createOreMcpServer } from "./logic/create-server";
+
+async function createRequestTransport(
+	context: RequestContext,
+): Promise<WebStandardStreamableHTTPServerTransport> {
+	const server = await createOreMcpServer(context);
+	const transport = new WebStandardStreamableHTTPServerTransport({
+		// This worker is used as a simple per-request tool server behind a
+		// Cloudflare service binding, so stateless mode avoids unnecessary
+		// session bookkeeping and transport conflicts.
+		sessionIdGenerator: undefined,
+	});
+
+	await server.connect(transport);
+	return transport;
+}
 
 export async function handleMcpRequest(
 	request: Request,
 	env: Env,
-	ctx: ExecutionContext,
+	_ctx: ExecutionContext,
 ): Promise<Response> {
 	const fallbackRequestId =
 		request.headers.get(HEADER_REQUEST_ID) ?? crypto.randomUUID();
@@ -20,17 +35,8 @@ export async function handleMcpRequest(
 			requestId: caller.requestId,
 			callerWorker: caller.callerWorker,
 		};
-
-		const { createMcpHandler } = await import("agents/mcp");
-		const server = await createOreMcpServer(context);
-		const mcpHandler = createMcpHandler(
-			server as unknown as Parameters<typeof createMcpHandler>[0],
-			{
-				route: MCP_ROUTE,
-			},
-		);
-
-		return await mcpHandler(request, env, ctx);
+		const transport = await createRequestTransport(context);
+		return await transport.handleRequest(request);
 	} catch (error) {
 		return toHttpErrorResponse(error, fallbackRequestId);
 	}
