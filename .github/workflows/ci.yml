@@ -20,6 +20,7 @@ jobs:
         with:
           node-version: "24"
           cache: true
+          run-install: false
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
