@@ -3,6 +3,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import type { RequestContext } from "@/lib/worker";
 import { getContextByToolEntry, getContextToolInventory } from "@/modules/context";
+import { registerGitHubTools } from "@/modules/github/tools/register-tools";
 import { ORE_MCP_SERVER_NAME, ORE_MCP_SERVER_VERSION } from "../constants";
 import { executeTool } from "./execute-tool";
 
@@ -46,6 +47,8 @@ export async function createOreMcpServer(context: RequestContext): Promise<McpSe
         }),
     );
   }
+
+  registerGitHubTools(server, context);
 
   return server;
 }

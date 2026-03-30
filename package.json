@@ -10,11 +10,14 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
     "context:validate": "bun scripts/context-validate.ts",
     "context:sync": "bun scripts/context-sync.ts",
+    "github-insights:sync": "bun scripts/github-insights-sync.ts",
     "tool:dev": "bun scripts/tool-dev.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.28.0",
     "agents": "^0.8.7",
+    "@ai-sdk/google": "^3.0.43",
+    "ai": "^6.0.116",
     "zod": "^4.3.6"
   },
   "devDependencies": {
