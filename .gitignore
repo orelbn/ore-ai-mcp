@@ -7,5 +7,5 @@ cloudflare-env.d.ts
 .DS_Store
 .context/
 .context-cache/
+.project-insights/
 internal/local-mcp-dev/ui/dist/
-.playwright-cli/
