@@ -35,4 +35,4 @@ jobs:
         run: vp test
 
       - name: Validate Worker Build
-        run: wrangler deploy --dry-run --env=""
+        run: bun x wrangler deploy --dry-run --env=""
