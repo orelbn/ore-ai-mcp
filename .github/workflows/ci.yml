@@ -34,8 +34,5 @@ jobs:
       - name: Test
         run: vp test
 
-      - name: Build UI
-        run: vp build
-
       - name: Validate Worker Build
         run: wrangler deploy --dry-run --env=""
