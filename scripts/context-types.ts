@@ -1,5 +1,5 @@
 export interface SyncArgs {
-	env?: string;
-	dryRun: boolean;
-	local: boolean;
+  env?: string;
+  dryRun: boolean;
+  local: boolean;
 }

@@ -7,208 +7,202 @@ export const CONTEXT_DIR = ".context";
 export const CONTEXT_MANIFEST = "context-manifest.json";
 
 const manifestEntrySchema = z.object({
-	contextId: z.string().min(1),
-	title: z.string().min(1),
-	toolName: z
-		.string()
-		.min(1)
-		.regex(/^[a-z0-9._-]+$/, "toolName must use [a-z0-9._-] only")
-		.optional(),
-	description: z.string().min(1).optional(),
-	uiHint: z.string().min(1).optional(),
-	markdownPath: z.string().min(1),
-	imagePaths: z.array(z.string().min(1)).optional(),
+  contextId: z.string().min(1),
+  title: z.string().min(1),
+  toolName: z
+    .string()
+    .min(1)
+    .regex(/^[a-z0-9._-]+$/, "toolName must use [a-z0-9._-] only")
+    .optional(),
+  description: z.string().min(1).optional(),
+  uiHint: z.string().min(1).optional(),
+  markdownPath: z.string().min(1),
+  imagePaths: z.array(z.string().min(1)).optional(),
 });
 
 const manifestSchema = z.object({
-	version: z.literal(1),
-	entries: z.array(manifestEntrySchema).min(1),
+  version: z.literal(1),
+  entries: z.array(manifestEntrySchema).min(1),
 });
 
 export type ContextManifest = z.infer<typeof manifestSchema>;
 export type ContextManifestEntry = z.infer<typeof manifestEntrySchema>;
 
 export interface ValidationIssue {
-	path: string;
-	message: string;
+  path: string;
+  message: string;
 }
 
 function toPosixPath(pathValue: string): string {
-	return pathValue.replaceAll("\\", "/");
+  return pathValue.replaceAll("\\", "/");
 }
 
 function toToolSlug(contextId: string): string {
-	return contextId
-		.toLowerCase()
-		.replaceAll(/[^a-z0-9]+/g, "_")
-		.replaceAll(/^_+|_+$/g, "");
+  return contextId
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, "_")
+    .replaceAll(/^_+|_+$/g, "");
 }
 
 export function buildContextToolName(contextId: string): string {
-	const slug = toToolSlug(contextId);
-	if (!slug) {
-		throw new Error(`Cannot derive tool name from contextId: ${contextId}`);
-	}
-	return `${CONTEXT_TOOL_PREFIX}.${slug}`;
+  const slug = toToolSlug(contextId);
+  if (!slug) {
+    throw new Error(`Cannot derive tool name from contextId: ${contextId}`);
+  }
+  return `${CONTEXT_TOOL_PREFIX}.${slug}`;
 }
 
 export function resolveManifestToolName(entry: ContextManifestEntry): string {
-	return entry.toolName ?? buildContextToolName(entry.contextId);
+  return entry.toolName ?? buildContextToolName(entry.contextId);
 }
 
 function validateRelativePath(pathValue: string): boolean {
-	if (!pathValue.trim()) {
-		return false;
-	}
-	if (pathValue.startsWith("/") || pathValue.startsWith("./")) {
-		return false;
-	}
-	const normalized = toPosixPath(pathValue);
-	return !normalized.split("/").includes("..");
+  if (!pathValue.trim()) {
+    return false;
+  }
+  if (pathValue.startsWith("/") || pathValue.startsWith("./")) {
+    return false;
+  }
+  const normalized = toPosixPath(pathValue);
+  return !normalized.split("/").includes("..");
 }
 
 function ensurePathInside(baseDir: string, pathValue: string): boolean {
-	const absoluteBase = resolve(baseDir);
-	const absoluteTarget = resolve(baseDir, pathValue);
-	return (
-		absoluteTarget === absoluteBase ||
-		absoluteTarget.startsWith(`${absoluteBase}/`)
-	);
+  const absoluteBase = resolve(baseDir);
+  const absoluteTarget = resolve(baseDir, pathValue);
+  return absoluteTarget === absoluteBase || absoluteTarget.startsWith(`${absoluteBase}/`);
 }
 
 export function resolveContextRoot(repoRoot: string): string {
-	return join(repoRoot, CONTEXT_DIR);
+  return join(repoRoot, CONTEXT_DIR);
 }
 
 function getManifestPath(repoRoot: string): string {
-	return join(repoRoot, CONTEXT_DIR, CONTEXT_MANIFEST);
+  return join(repoRoot, CONTEXT_DIR, CONTEXT_MANIFEST);
 }
 
 export function loadManifest(repoRoot: string): ContextManifest {
-	const manifestPath = getManifestPath(repoRoot);
-	if (!existsSync(manifestPath)) {
-		throw new Error(`Manifest file not found: ${manifestPath}`);
-	}
+  const manifestPath = getManifestPath(repoRoot);
+  if (!existsSync(manifestPath)) {
+    throw new Error(`Manifest file not found: ${manifestPath}`);
+  }
 
-	let json: unknown;
-	try {
-		json = JSON.parse(readFileSync(manifestPath, "utf8"));
-	} catch (error) {
-		throw new Error(`Manifest is not valid JSON: ${manifestPath}`, {
-			cause: error,
-		});
-	}
+  let json: unknown;
+  try {
+    json = JSON.parse(readFileSync(manifestPath, "utf8"));
+  } catch (error) {
+    throw new Error(`Manifest is not valid JSON: ${manifestPath}`, {
+      cause: error,
+    });
+  }
 
-	const parsed = manifestSchema.safeParse(json);
-	if (!parsed.success) {
-		throw new Error(
-			`Manifest schema validation failed: ${parsed.error.issues
-				.map((issue) => issue.message)
-				.join("; ")}`,
-		);
-	}
+  const parsed = manifestSchema.safeParse(json);
+  if (!parsed.success) {
+    throw new Error(
+      `Manifest schema validation failed: ${parsed.error.issues
+        .map((issue) => issue.message)
+        .join("; ")}`,
+    );
+  }
 
-	return parsed.data;
+  return parsed.data;
 }
 
-export function validateManifest(
-	repoRoot: string,
-	manifest: ContextManifest,
-): ValidationIssue[] {
-	const issues: ValidationIssue[] = [];
-	const contextIds = new Set<string>();
-	const toolNames = new Set<string>();
-	const contextRoot = resolveContextRoot(repoRoot);
+export function validateManifest(repoRoot: string, manifest: ContextManifest): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const contextIds = new Set<string>();
+  const toolNames = new Set<string>();
+  const contextRoot = resolveContextRoot(repoRoot);
 
-	for (const entry of manifest.entries) {
-		if (contextIds.has(entry.contextId)) {
-			issues.push({
-				path: entry.contextId,
-				message: `Duplicate contextId: ${entry.contextId}`,
-			});
-		} else {
-			contextIds.add(entry.contextId);
-		}
+  for (const entry of manifest.entries) {
+    if (contextIds.has(entry.contextId)) {
+      issues.push({
+        path: entry.contextId,
+        message: `Duplicate contextId: ${entry.contextId}`,
+      });
+    } else {
+      contextIds.add(entry.contextId);
+    }
 
-		const resolvedToolName = resolveManifestToolName(entry);
-		if (toolNames.has(resolvedToolName)) {
-			issues.push({
-				path: resolvedToolName,
-				message: `Duplicate toolName mapping: ${resolvedToolName}`,
-			});
-		} else {
-			toolNames.add(resolvedToolName);
-		}
+    const resolvedToolName = resolveManifestToolName(entry);
+    if (toolNames.has(resolvedToolName)) {
+      issues.push({
+        path: resolvedToolName,
+        message: `Duplicate toolName mapping: ${resolvedToolName}`,
+      });
+    } else {
+      toolNames.add(resolvedToolName);
+    }
 
-		if (!validateRelativePath(entry.markdownPath)) {
-			issues.push({
-				path: entry.markdownPath,
-				message: "markdownPath must be a safe relative path",
-			});
-			continue;
-		}
+    if (!validateRelativePath(entry.markdownPath)) {
+      issues.push({
+        path: entry.markdownPath,
+        message: "markdownPath must be a safe relative path",
+      });
+      continue;
+    }
 
-		if (!entry.markdownPath.startsWith("notes/")) {
-			issues.push({
-				path: entry.markdownPath,
-				message: "markdownPath must be under notes/",
-			});
-		}
+    if (!entry.markdownPath.startsWith("notes/")) {
+      issues.push({
+        path: entry.markdownPath,
+        message: "markdownPath must be under notes/",
+      });
+    }
 
-		if (!entry.markdownPath.toLowerCase().endsWith(".md")) {
-			issues.push({
-				path: entry.markdownPath,
-				message: "markdownPath must point to a .md file",
-			});
-		}
+    if (!entry.markdownPath.toLowerCase().endsWith(".md")) {
+      issues.push({
+        path: entry.markdownPath,
+        message: "markdownPath must point to a .md file",
+      });
+    }
 
-		if (!ensurePathInside(contextRoot, entry.markdownPath)) {
-			issues.push({
-				path: entry.markdownPath,
-				message: "markdownPath escapes context directory",
-			});
-		}
+    if (!ensurePathInside(contextRoot, entry.markdownPath)) {
+      issues.push({
+        path: entry.markdownPath,
+        message: "markdownPath escapes context directory",
+      });
+    }
 
-		const markdownAbsolutePath = join(contextRoot, entry.markdownPath);
-		if (!existsSync(markdownAbsolutePath)) {
-			issues.push({
-				path: entry.markdownPath,
-				message: "markdown file does not exist",
-			});
-		}
+    const markdownAbsolutePath = join(contextRoot, entry.markdownPath);
+    if (!existsSync(markdownAbsolutePath)) {
+      issues.push({
+        path: entry.markdownPath,
+        message: "markdown file does not exist",
+      });
+    }
 
-		for (const imagePath of entry.imagePaths ?? []) {
-			if (!validateRelativePath(imagePath)) {
-				issues.push({
-					path: imagePath,
-					message: "image path must be a safe relative path",
-				});
-				continue;
-			}
+    for (const imagePath of entry.imagePaths ?? []) {
+      if (!validateRelativePath(imagePath)) {
+        issues.push({
+          path: imagePath,
+          message: "image path must be a safe relative path",
+        });
+        continue;
+      }
 
-			if (!imagePath.startsWith("images/")) {
-				issues.push({
-					path: imagePath,
-					message: "image path must be under images/",
-				});
-			}
+      if (!imagePath.startsWith("images/")) {
+        issues.push({
+          path: imagePath,
+          message: "image path must be under images/",
+        });
+      }
 
-			if (!ensurePathInside(contextRoot, imagePath)) {
-				issues.push({
-					path: imagePath,
-					message: "image path escapes context directory",
-				});
-			}
+      if (!ensurePathInside(contextRoot, imagePath)) {
+        issues.push({
+          path: imagePath,
+          message: "image path escapes context directory",
+        });
+      }
 
-			const imageAbsolutePath = join(contextRoot, imagePath);
-			if (!existsSync(imageAbsolutePath)) {
-				issues.push({
-					path: imagePath,
-					message: "image file does not exist",
-				});
-			}
-		}
-	}
+      const imageAbsolutePath = join(contextRoot, imagePath);
+      if (!existsSync(imageAbsolutePath)) {
+        issues.push({
+          path: imagePath,
+          message: "image file does not exist",
+        });
+      }
+    }
+  }
 
-	return issues;
+  return issues;
 }

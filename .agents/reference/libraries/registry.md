@@ -7,13 +7,13 @@ Both humans and agents should update this file when a new library's `llms.txt` i
 
 ## Registry
 
-| Library | llms.txt URL | Notes |
-|---------|-------------|-------|
-| Cloudflare Workers | https://developers.cloudflare.com/workers/llms.txt | Primary docs for Worker runtime and Wrangler usage. |
-| Cloudflare Developer Platform | https://developers.cloudflare.com/llms.txt | Broad product index (R2, Queues, D1, Workflows, etc.). |
-| Model Context Protocol | https://modelcontextprotocol.io/llms.txt | Canonical protocol/spec docs for `@modelcontextprotocol/sdk`. |
-| Zod | https://zod.dev/llms.txt | Schema library used directly and by the MCP SDK. |
-| Bun | https://bun.sh/llms.txt | Runtime and test runner used in this repository. |
+| Library                       | llms.txt URL                                       | Notes                                                         |
+| ----------------------------- | -------------------------------------------------- | ------------------------------------------------------------- |
+| Cloudflare Workers            | https://developers.cloudflare.com/workers/llms.txt | Primary docs for Worker runtime and Wrangler usage.           |
+| Cloudflare Developer Platform | https://developers.cloudflare.com/llms.txt         | Broad product index (R2, Queues, D1, Workflows, etc.).        |
+| Model Context Protocol        | https://modelcontextprotocol.io/llms.txt           | Canonical protocol/spec docs for `@modelcontextprotocol/sdk`. |
+| Zod                           | https://zod.dev/llms.txt                           | Schema library used directly and by the MCP SDK.              |
+| Bun                           | https://bun.sh/llms.txt                            | Runtime and test runner used in this repository.              |
 
 ## How to add an entry
 

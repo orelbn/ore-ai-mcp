@@ -8,6 +8,7 @@ description: Follow project commit conventions when preparing commit messages an
 All commits must follow the Conventional Commits specification v1.0.0.
 
 Format:
+
 ```
 <type>[optional scope]: <description>
 
@@ -17,6 +18,7 @@ Format:
 ```
 
 Allowed types:
+
 - `feat` - a new feature
 - `fix` - a bug fix
 - `docs` - documentation changes only
@@ -29,6 +31,7 @@ Allowed types:
 - `revert` - reverting a previous commit
 
 Rules:
+
 - Use lowercase for the type and description
 - Keep the description short and in the imperative mood ("add feature" not "added feature")
 - Do not end the description with a period
