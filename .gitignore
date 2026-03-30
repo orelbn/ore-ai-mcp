@@ -8,3 +8,4 @@ cloudflare-env.d.ts
 .context/
 .context-cache/
 internal/local-mcp-dev/ui/dist/
+.playwright-cli/

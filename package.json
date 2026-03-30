@@ -4,15 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "bunx wrangler dev",
     "build": "wrangler deploy --dry-run --env=\"\"",
     "deploy:prod": "wrangler deploy --env production",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
-    "context:validate": "bun run scripts/context-validate.ts",
-    "context:sync": "bun run scripts/context-sync.ts",
-    "tool:dev": "bun run tool:build && bun run internal/local-mcp-dev/server.ts",
-    "tool:api": "bun run internal/local-mcp-dev/server.ts",
-    "tool:build": "vp build internal/local-mcp-dev/ui",
-    "tool:ui": "vp dev internal/local-mcp-dev/ui --host 127.0.0.1 --port 4318"
+    "context:validate": "bun scripts/context-validate.ts",
+    "context:sync": "bun scripts/context-sync.ts",
+    "tool:dev": "bun scripts/tool-dev.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",

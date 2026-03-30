@@ -1,5 +1,6 @@
 import type { ChangeEvent } from "react";
 import type { ToolContentResponse, ToolSummary } from "../types";
+import { RefreshIcon } from "./RefreshIcon";
 
 type ToolListProps = {
   tools: ToolSummary[];
@@ -50,8 +51,8 @@ function ToolList({ tools, selectedToolName, onSelectTool }: ToolListProps) {
             <div className="tool-name">{tool.toolName}</div>
           </div>
           <div className="tool-row-meta">
-            <span className="tool-kind">{tool.kind}</span>
-            {tool.isDisabled ? <span className="tool-flag">unavailable</span> : null}
+            <span>{tool.kind}</span>
+            <span>{tool.isDisabled ? "Unavailable" : "Available"}</span>
           </div>
         </button>
       ))}
@@ -61,7 +62,7 @@ function ToolList({ tools, selectedToolName, onSelectTool }: ToolListProps) {
 
 function ToolDetail({ tool, selectedToolContent, onPreviewTool }: ToolDetailProps) {
   if (!tool) {
-    return <p className="empty-state">Select a tool to inspect it.</p>;
+    return <div className="empty-state detail-empty-state">Select a tool to inspect it.</div>;
   }
 
   const preview = selectedToolContent?.structuredContent ?? null;
@@ -75,12 +76,16 @@ function ToolDetail({ tool, selectedToolContent, onPreviewTool }: ToolDetailProp
           <p className="tool-name">{tool.toolName}</p>
           <p className="detail-copy">{tool.description || "No description provided."}</p>
         </div>
-        <div className="detail-flags">
-          <span className="tool-kind">{tool.kind}</span>
-          <span className={`tool-flag ${tool.isDisabled ? "" : "success"}`}>
-            {tool.isDisabled ? "unavailable" : "active"}
-          </span>
-        </div>
+        <dl className="detail-meta">
+          <div>
+            <dt>Kind</dt>
+            <dd>{tool.kind}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>{tool.isDisabled ? "Unavailable" : "Active"}</dd>
+          </div>
+        </dl>
       </header>
 
       <div className="detail-actions">
@@ -134,38 +139,47 @@ export function ToolBrowser({
 }: ToolBrowserProps) {
   return (
     <section className="browser">
-      <header className="browser-header">
-        <div>
-          <h2>Tools</h2>
-          <p className="section-copy">Search the current registry and preview tool payloads.</p>
-        </div>
-      </header>
-
       <div className="browser-toolbar">
-        <input
-          type="search"
-          placeholder="Filter by tool name or title"
-          value={toolFilter}
-          onChange={(event: ChangeEvent<HTMLInputElement>) => onFilterChange(event.target.value)}
-          disabled={!isReady}
-        />
-        <button type="button" className="button ghost" onClick={onRefreshTools} disabled={!isReady}>
-          Refresh Tools
-        </button>
+        <div className="browser-toolbar-title">Tools</div>
+        <div className="browser-toolbar-controls">
+          <input
+            type="search"
+            className="tool-filter-input"
+            placeholder="Search tools"
+            value={toolFilter}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => onFilterChange(event.target.value)}
+            disabled={!isReady}
+          />
+          <button
+            type="button"
+            className="icon-button toolbar-icon-button"
+            onClick={onRefreshTools}
+            disabled={!isReady}
+            aria-label="Refresh tools"
+            data-tooltip="Refresh tools"
+            title="Refresh tools"
+          >
+            <RefreshIcon />
+          </button>
+        </div>
       </div>
 
       <div className="browser-body">
-        <ToolList
-          tools={filteredTools}
-          selectedToolName={selectedTool?.toolName ?? null}
-          onSelectTool={onSelectTool}
-        />
-        <article className="tool-detail">
-          <ToolDetail
-            tool={selectedTool}
-            selectedToolContent={selectedToolContent}
-            onPreviewTool={onPreviewTool}
+        <div className="tool-list-scroll">
+          <ToolList
+            tools={filteredTools}
+            selectedToolName={selectedTool?.toolName ?? null}
+            onSelectTool={onSelectTool}
           />
+        </div>
+        <article className="tool-detail">
+          <div className="tool-detail-scroll">
+            <ToolDetail
+              tool={selectedTool}
+              selectedToolContent={selectedToolContent}
+              onPreviewTool={onPreviewTool}
+            />
+          </div>
         </article>
       </div>
     </section>

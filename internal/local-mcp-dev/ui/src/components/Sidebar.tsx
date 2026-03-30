@@ -21,26 +21,26 @@ function OverviewMetrics({ lastStatus }: OverviewMetricsProps) {
   const status = lastStatus?.result?.structuredContent;
   if (!status) {
     return (
-      <div className="metric-strip">
-        <div className="metric">
-          <span className="metric-label">Server</span>
-          <strong className="metric-value">No data</strong>
+      <dl className="metric-list">
+        <div className="metric-row">
+          <dt>Server</dt>
+          <dd>No data</dd>
         </div>
-      </div>
+      </dl>
     );
   }
 
   return (
-    <div className="metric-strip">
-      <div className="metric">
-        <span className="metric-label">Server</span>
-        <strong className="metric-value">{status.server.version}</strong>
+    <dl className="metric-list">
+      <div className="metric-row">
+        <dt>Server</dt>
+        <dd>{status.server.version}</dd>
       </div>
-      <div className="metric">
-        <span className="metric-label">Visible Tools</span>
-        <strong className="metric-value">{status.context.toolCount}</strong>
+      <div className="metric-row">
+        <dt>Visible tools</dt>
+        <dd>{status.context.toolCount}</dd>
       </div>
-    </div>
+    </dl>
   );
 }
 
@@ -50,13 +50,16 @@ function LocalServerStatus({ config }: LocalServerStatusProps) {
   }
 
   return (
-    <div className="target-rail">
-      <div className="target-label">Detected MCP URL</div>
-      <div className="target-endpoint">{config.localUrl || "Unavailable"}</div>
-      <p className="preset-caution">
-        Shared secret loaded locally. Nothing is entered in the browser.
-      </p>
-    </div>
+    <dl className="server-meta">
+      <div className="server-meta-row">
+        <dt>Detected MCP URL</dt>
+        <dd className="target-endpoint">{config.localUrl || "Unavailable"}</dd>
+      </div>
+      <div className="server-meta-row">
+        <dt>Auth</dt>
+        <dd>Shared secret is read from local config.</dd>
+      </div>
+    </dl>
   );
 }
 
@@ -72,10 +75,6 @@ export function Sidebar({
     <aside className="sidebar">
       <section className="sidebar-section">
         <h2>Local Server</h2>
-        <p className="section-copy">
-          The local helper reads the shared secret from `.dev.vars` and auto-detects the MCP URL
-          when possible.
-        </p>
         <LocalServerStatus config={config} />
         <div className="action-row">
           <button
@@ -94,9 +93,12 @@ export function Sidebar({
         <OverviewMetrics lastStatus={lastStatus} />
       </section>
 
-      <pre className="flash-message" data-tone={flashTone}>
-        {flashMessage}
-      </pre>
+      <section className="sidebar-section">
+        <h2>Session</h2>
+        <pre className="flash-message" data-tone={flashTone}>
+          {flashMessage}
+        </pre>
+      </section>
     </aside>
   );
 }

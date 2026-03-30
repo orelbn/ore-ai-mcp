@@ -1,55 +1,68 @@
 # Development
 
-## Setup
+## Quick Start
+
+1. Install dependencies:
 
 ```bash
-vp install
+bun install
+```
+
+2. Create local config:
+
+```bash
 cp .dev.vars.example .dev.vars
 cp wrangler.jsonc.example wrangler.jsonc
 ```
 
-Edit `wrangler.jsonc` with your local bucket names before running the worker.
+3. Edit `wrangler.jsonc` with your local bucket names.
 
-## Worker
-
-```bash
-wrangler dev
-```
-
-## Local MCP Dev UI
-
-Run the local API helper:
+4. Start the MCP server:
 
 ```bash
-bun run internal/local-mcp-dev/server.ts
+vp run dev
 ```
 
-Run the UI:
+This starts the local Cloudflare worker and serves the MCP endpoint on `http://127.0.0.1:8787/mcp`.
+
+## Local Dashboard Tool
+
+If you want the local dashboard for browsing tools and previewing payloads, run:
 
 ```bash
-vp dev
+vp run tool:dev
 ```
 
-To build the UI instead:
+That starts:
 
-```bash
-vp build
-bun run internal/local-mcp-dev/server.ts
-```
+- the local Cloudflare worker on `http://127.0.0.1:8787`
+- the local MCP dashboard on `http://127.0.0.1:4317`
 
-Useful env vars:
+## Local Config
+
+Required local files:
+
+- `.dev.vars`
+- `wrangler.jsonc`
+
+Important values:
+
+- `.dev.vars` should include `MCP_INTERNAL_SHARED_SECRET`
+- `wrangler.jsonc` should point to your local bucket names
+
+Useful optional env vars:
 
 - `INTERNAL_MCP_LOCAL_URL`
 - `INTERNAL_MCP_LOCAL_SECRET`
 
-## Context commands
+## Context Commands
 
 ```bash
-bun run scripts/context-validate.ts
-bun run scripts/context-sync.ts --dry-run
-bun run scripts/context-sync.ts
-bun run scripts/context-sync.ts --env production --dry-run
-bun run scripts/context-sync.ts --env production
+vp run context:validate
+vp run context:sync -- --dry-run
+vp run context:sync
+vp run context:sync -- --env production --dry-run
+vp run context:sync -- --env production
 ```
 
 ## Checks

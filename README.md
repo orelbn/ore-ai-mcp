@@ -29,4 +29,21 @@ Real context content is local-only and gitignored. Safe starter files live in `.
 
 ## Development
 
-See [DEVELOPMENT.md](./DEVELOPMENT.md).
+The normal local workflow is:
+
+```bash
+vp install
+cp .dev.vars.example .dev.vars
+cp wrangler.jsonc.example wrangler.jsonc
+vp run dev
+```
+
+That starts the MCP server only.
+
+If you want the local dashboard tool, run:
+
+```bash
+vp run tool:dev
+```
+
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for setup details.

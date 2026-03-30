@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { fetchConfig, fetchStatus, fetchToolContent, fetchTools } from "./api";
 import { Masthead } from "./components/Masthead";
-import { Sidebar } from "./components/Sidebar";
 import { ToolBrowser } from "./components/ToolBrowser";
 import type {
-  FlashTone,
   LocalDevClientConfig,
   StatusResponse,
   ToolContentResponse,
@@ -31,28 +29,24 @@ function getSelectedTool(
   return tools.find((tool) => tool.toolName === selectedToolName) ?? null;
 }
 
-function toMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Unexpected error";
+async function ignoreErrors(action: () => Promise<void>): Promise<void> {
+  try {
+    await action();
+  } catch {}
 }
 
 export function App() {
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [config, setConfig] = useState<LocalDevClientConfig | null>(null);
   const [toolFilter, setToolFilter] = useState("");
   const [tools, setTools] = useState<ToolSummary[]>([]);
   const [selectedToolName, setSelectedToolName] = useState<string | null>(null);
   const [selectedToolContent, setSelectedToolContent] = useState<ToolContentResponse | null>(null);
   const [lastStatus, setLastStatus] = useState<StatusResponse | null>(null);
-  const [flashMessage, setFlashMessage] = useState("");
-  const [flashTone, setFlashTone] = useState<FlashTone>("neutral");
 
   const isReady = config !== null && !config.setupMessage;
   const filteredTools = getFilteredTools(tools, toolFilter);
   const selectedTool = getSelectedTool(tools, selectedToolName);
-
-  function showMessage(message: string, tone: FlashTone = "neutral") {
-    setFlashMessage(message);
-    setFlashTone(tone);
-  }
 
   async function refreshStatusOnly() {
     const payload = await fetchStatus();
@@ -84,23 +78,11 @@ export function App() {
   }
 
   async function handleRefreshAll() {
-    showMessage("Loading live MCP state...");
-    try {
-      await refreshAll();
-      showMessage("Loaded live MCP state.");
-    } catch (error) {
-      showMessage(toMessage(error), "error");
-    }
+    await ignoreErrors(refreshAll);
   }
 
   async function handleRefreshTools() {
-    showMessage("Refreshing tools...");
-    try {
-      await refreshToolsOnly();
-      showMessage("Tool list refreshed.");
-    } catch (error) {
-      showMessage(toMessage(error), "error");
-    }
+    await ignoreErrors(refreshToolsOnly);
   }
 
   async function handlePreviewTool() {
@@ -108,21 +90,17 @@ export function App() {
       return;
     }
 
-    showMessage(`Loading ${selectedTool.toolName}...`);
-    try {
+    await ignoreErrors(async () => {
       const payload = await fetchToolContent(selectedTool.toolName);
       setSelectedToolContent(payload);
-      showMessage(`Loaded ${selectedTool.toolName}.`);
-    } catch (error) {
-      showMessage(toMessage(error), "error");
-    }
+    });
   }
 
   useEffect(() => {
     let isActive = true;
 
     async function bootstrap() {
-      try {
+      await ignoreErrors(async () => {
         const nextConfig = await fetchConfig();
         if (!isActive) {
           return;
@@ -131,8 +109,6 @@ export function App() {
         setConfig(nextConfig);
 
         if (nextConfig.setupMessage) {
-          setFlashMessage(nextConfig.setupMessage);
-          setFlashTone("error");
           return;
         }
 
@@ -143,15 +119,10 @@ export function App() {
 
         setLastStatus(statusPayload);
         setTools(toolsPayload.result?.structuredContent?.tools ?? []);
-        setFlashMessage("Loaded live MCP state.");
-        setFlashTone("neutral");
-      } catch (error) {
-        if (!isActive) {
-          return;
-        }
+      });
 
-        setFlashMessage(toMessage(error));
-        setFlashTone("error");
+      if (isActive) {
+        setIsBootstrapping(false);
       }
     }
 
@@ -162,32 +133,19 @@ export function App() {
     };
   }, []);
 
-  if (!config) {
-    return (
-      <div className="page-shell">
-        <header className="masthead">
-          <div className="masthead-copy">
-            <p className="eyebrow">Local Only</p>
-            <h1>Local MCP Dev</h1>
-            <p className="hero-copy">Loading local MCP configuration...</p>
-          </div>
-        </header>
-      </div>
-    );
+  if (isBootstrapping || !config) {
+    return <div className="app-booting" aria-hidden="true" />;
   }
 
   return (
-    <div className="page-shell">
-      <Masthead config={config} lastStatus={lastStatus} />
+    <>
+      <Masthead
+        config={config}
+        lastStatus={lastStatus}
+        isReady={isReady}
+        onRefreshAll={handleRefreshAll}
+      />
       <main className="workspace">
-        <Sidebar
-          config={config}
-          lastStatus={lastStatus}
-          flashMessage={flashMessage}
-          flashTone={flashTone}
-          isReady={isReady}
-          onRefreshAll={handleRefreshAll}
-        />
         <ToolBrowser
           toolFilter={toolFilter}
           filteredTools={filteredTools}
@@ -203,6 +161,6 @@ export function App() {
           onPreviewTool={handlePreviewTool}
         />
       </main>
-    </div>
+    </>
   );
 }

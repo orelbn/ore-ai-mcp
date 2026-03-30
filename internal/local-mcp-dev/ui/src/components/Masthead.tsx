@@ -1,13 +1,16 @@
 import type { LocalDevClientConfig, StatusResponse } from "../types";
+import { RefreshIcon } from "./RefreshIcon";
 
 type MastheadProps = {
   config: LocalDevClientConfig;
+  isReady: boolean;
   lastStatus: StatusResponse | null;
+  onRefreshAll: () => void;
 };
 
-export function Masthead({ config, lastStatus }: MastheadProps) {
+export function Masthead({ config, isReady, lastStatus, onRefreshAll }: MastheadProps) {
   const summary = lastStatus?.result?.structuredContent;
-  const label = summary && lastStatus ? lastStatus.connection.label : "Waiting";
+  const label = summary && lastStatus ? lastStatus.connection.label : "Waiting for server";
   const target = summary?.server?.version
     ? `${lastStatus?.connection.url ?? ""} · v${summary.server.version}`
     : config.setupMessage ||
@@ -16,16 +19,22 @@ export function Masthead({ config, lastStatus }: MastheadProps) {
 
   return (
     <header className="masthead">
-      <div className="masthead-copy">
-        <p className="eyebrow">Local Only</p>
-        <h1>Local MCP Dev</h1>
-        <p className="hero-copy">
-          Inspect the local MCP server and preview context tools while developing locally.
-        </p>
-      </div>
       <div className="masthead-target">
-        <span className="hero-label">{label}</span>
-        <div className="hero-target">{target}</div>
+        <div className="masthead-label">{label}</div>
+        <div className="masthead-value">{target}</div>
+        <div className="masthead-separator" aria-hidden="true">
+          ·
+        </div>
+        <button
+          type="button"
+          className="icon-button"
+          onClick={onRefreshAll}
+          disabled={!isReady}
+          aria-label="Refresh local server"
+          title="Refresh local server"
+        >
+          <RefreshIcon />
+        </button>
       </div>
     </header>
   );
