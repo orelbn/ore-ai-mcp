@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-bun install
+vp install
 cp .dev.vars.example .dev.vars
 cp wrangler.jsonc.example wrangler.jsonc
 ```
@@ -60,11 +60,6 @@ vp test
 vp build
 wrangler deploy --dry-run --env=""
 ```
-
-Test note:
-
-- Use `vp test` for the full suite.
-- `vp run test` also works through the root `test` script when you want the package-script path.
 
 ## Deploy
 

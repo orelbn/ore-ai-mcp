@@ -2,7 +2,7 @@
 
 ## Package Manager
 
-- Use `bun install` for dependencies.
+- Use `vp install` for dependencies.
 - Use Vite+: `vp dev`, `vp build`, `vp check`, `vp test`.
 - Use `vp test` for the full test suite.
 

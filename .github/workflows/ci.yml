@@ -22,13 +22,13 @@ jobs:
         run: cp wrangler.jsonc.example wrangler.jsonc
 
       - name: Check
-        run: vp check
+        run: bun x vp check
 
       - name: Test
-        run: vp test
+        run: bun x vp test
 
       - name: Build UI
-        run: vp build
+        run: bun x vp build
 
       - name: Validate Worker Build
         run: wrangler deploy --dry-run --env=""

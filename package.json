@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node ./node_modules/vitest/vitest.mjs run",
     "build": "wrangler deploy --dry-run --env=\"\"",
     "deploy:prod": "wrangler deploy --env production",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
@@ -38,5 +37,6 @@
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
     "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
-  }
+  },
+  "packageManager": "bun@1.3.11"
 }
