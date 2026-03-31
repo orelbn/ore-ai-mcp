@@ -48,13 +48,12 @@ export function toToolErrorResult(error: AppError): CallToolResult {
   };
 }
 
-export function toHttpErrorResponse(error: unknown, fallbackRequestId?: string): Response {
+export function toHttpErrorResponse(error: unknown): Response {
   const appError = normalizeError(error);
   const message = toPublicMessage(appError);
   return Response.json(
     {
       ok: false,
-      requestId: fallbackRequestId ?? crypto.randomUUID(),
       error: {
         code: appError.code,
         message,

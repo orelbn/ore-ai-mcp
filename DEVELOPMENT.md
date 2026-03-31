@@ -11,7 +11,6 @@ bun install
 2. Create local config:
 
 ```bash
-cp .dev.vars.example .dev.vars
 cp wrangler.jsonc.example wrangler.jsonc
 ```
 
@@ -25,35 +24,29 @@ vp run dev
 
 This starts the local Cloudflare worker and serves the MCP endpoint on `http://127.0.0.1:8787/mcp`.
 
-## Local Dashboard Tool
+## Local Inspector
 
-If you want the local dashboard for browsing tools and previewing payloads, run:
+If you want to inspect the running MCP server with the official MCP Inspector, run:
 
 ```bash
 vp run tool:dev
 ```
 
-That starts:
-
-- the local Cloudflare worker on `http://127.0.0.1:8787`
-- the local MCP dashboard on `http://127.0.0.1:4317`
+`tool:dev` reuses an already-running local worker when possible. If no local MCP server is reachable, it starts `vp run dev` first and then launches Inspector against the detected `/mcp` endpoint.
 
 ## Local Config
 
 Required local files:
 
-- `.dev.vars`
 - `wrangler.jsonc`
 
 Important values:
 
-- `.dev.vars` should include `MCP_INTERNAL_SHARED_SECRET`
 - `wrangler.jsonc` should point to your local bucket names
 
 Useful optional env vars:
 
 - `INTERNAL_MCP_LOCAL_URL`
-- `INTERNAL_MCP_LOCAL_SECRET`
 
 ## Context Commands
 
@@ -77,6 +70,5 @@ wrangler deploy --dry-run --env=""
 ## Deploy
 
 ```bash
-wrangler secret put MCP_INTERNAL_SHARED_SECRET --env production
 wrangler deploy --env production
 ```

@@ -27,7 +27,6 @@ function warnContextIndexFallback(context: RequestContext, reason: string, error
       scope: "context_repo",
       level: "warn",
       message: "context index unavailable, no tools registered",
-      requestId: context.requestId,
       reason,
       error,
     }),
@@ -40,7 +39,6 @@ function warnServerConfigFallback(context: RequestContext, reason: string, error
       scope: "context_repo",
       level: "warn",
       message: "mcp server config unavailable, using defaults",
-      requestId: context.requestId,
       reason,
       error,
     }),
@@ -140,11 +138,4 @@ export async function loadContextServerConfig(
   }
 
   return parsed.data;
-}
-
-export async function saveContextServerConfig(
-  context: RequestContext,
-  config: ContextServerConfig,
-): Promise<void> {
-  await context.env.CONTEXT_BUCKET.put(CONTEXT_SERVER_CONFIG_KEY, JSON.stringify(config));
 }

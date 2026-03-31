@@ -22,22 +22,15 @@ export type ContextServerConfig = {
   disabledTools: string[];
 };
 
-export type ToolDisableSource = "env" | "config";
-
 export type ContextToolInventoryEntry = ContextIndexToolEntry & {
   isDisabled: boolean;
-  disabledSources: ToolDisableSource[];
 };
 
 export type ContextToolInventory = {
   generatedAt: string;
   managedKeys: string[];
   configUpdatedAt: string;
-  disabledTools: {
-    env: string[];
-    config: string[];
-    combined: string[];
-  };
+  disabledTools: string[];
   tools: ContextToolInventoryEntry[];
 };
 

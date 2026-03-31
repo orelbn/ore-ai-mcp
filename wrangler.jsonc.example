@@ -20,11 +20,6 @@
 			"preview_bucket_name": "your-context-bucket-dev"
 		}
 	],
-	"vars": {
-		"MCP_ALLOWED_CALLER": "ore-ai",
-		"MCP_ENFORCE_CF_WORKER": "false",
-		"MCP_DISABLED_TOOLS": ""
-	},
 	"env": {
 		"production": {
 			"name": "ore-ai-mcp",
@@ -37,12 +32,7 @@
 					"bucket_name": "your-context-bucket-production",
 					"preview_bucket_name": "your-context-bucket-production"
 				}
-			],
-			"vars": {
-				"MCP_ALLOWED_CALLER": "ore-ai",
-				"MCP_ENFORCE_CF_WORKER": "true",
-				"MCP_DISABLED_TOOLS": ""
-			}
+			]
 		}
 	}
 }

@@ -3,8 +3,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import type { RequestContext } from "@/lib/worker";
 import { getContextByToolEntry, getContextToolInventory } from "@/modules/context";
-import { MCP_SERVER_ADMIN_TOOL, ORE_MCP_SERVER_NAME, ORE_MCP_SERVER_VERSION } from "../constants";
-import { adminToolInputSchema, handleAdminTool } from "./admin-tool";
+import { ORE_MCP_SERVER_NAME, ORE_MCP_SERVER_VERSION } from "../constants";
 import { executeTool } from "./execute-tool";
 
 function toSuccessResult(summary: string, payload: unknown): CallToolResult {
@@ -27,16 +26,6 @@ export async function createOreMcpServer(context: RequestContext): Promise<McpSe
     name: ORE_MCP_SERVER_NAME,
     version: ORE_MCP_SERVER_VERSION,
   });
-
-  server.registerTool(
-    MCP_SERVER_ADMIN_TOOL,
-    {
-      description: "Inspect the live MCP server and manage runtime disabled-tool overrides.",
-      inputSchema: adminToolInputSchema,
-    },
-    async (args) =>
-      executeTool(context, MCP_SERVER_ADMIN_TOOL, async () => handleAdminTool(context, args)),
-  );
 
   const toolInventory = await getContextToolInventory(context);
   for (const toolEntry of toolInventory.tools) {

@@ -25,18 +25,13 @@ describe("error handling", () => {
   });
 
   it("returns sanitized INTERNAL_ERROR for unknown thrown errors", async () => {
-    const response = toHttpErrorResponse(
-      new Error("database connection refused at host ..."),
-      "req_123",
-    );
+    const response = toHttpErrorResponse(new Error("database connection refused at host ..."));
     expect(response.status).toBe(500);
     const payload = (await response.json()) as {
       ok: boolean;
-      requestId: string;
       error: { code: string; message: string };
     };
     expect(payload.ok).toBe(false);
-    expect(payload.requestId).toBe("req_123");
     expect(payload.error).toEqual({
       code: "INTERNAL_ERROR",
       message: "Internal server error",

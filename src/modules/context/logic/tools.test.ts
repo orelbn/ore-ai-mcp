@@ -2,23 +2,13 @@ import { describe, expect, it } from "vite-plus/test";
 import { createMockR2Bucket } from "@mocks/r2-bucket";
 import type { AppError } from "@/lib/errors";
 import type { RequestContext } from "@/lib/worker";
-import {
-  CONTEXT_INDEX_KEY,
-  getContextByToolName,
-  isToolDisabled,
-  listContextToolEntries,
-} from "../index";
+import { CONTEXT_INDEX_KEY, getContextByToolName, listContextToolEntries } from "../index";
 
 function makeContext(bucket: R2Bucket): RequestContext {
   return {
     env: {
-      MCP_INTERNAL_SHARED_SECRET: "secret",
-      MCP_ALLOWED_CALLER: "ore-ai",
       CONTEXT_BUCKET: bucket,
     },
-    userId: "user_123",
-    requestId: "req_123",
-    callerWorker: "ore-ai",
   };
 }
 
@@ -180,13 +170,5 @@ describe("tool services", () => {
 
     const tools = await listContextToolEntries(makeContext(bucket));
     expect(tools.map((tool) => tool.toolName)).toEqual(["ore.context.a", "ore.context.b"]);
-  });
-
-  it("supports disabling specific tools by env var", () => {
-    const bucket = createMockR2Bucket({});
-    const context = makeContext(bucket);
-    context.env.MCP_DISABLED_TOOLS = "ore.context.orel_top_coffee_shops";
-    expect(isToolDisabled(context.env, "ore.context.orel_top_coffee_shops")).toBe(true);
-    expect(isToolDisabled(context.env, "ore.some_other_tool")).toBe(false);
   });
 });

@@ -11,10 +11,7 @@ export {
   getContextByToolEntry,
   getContextByToolName,
   getContextToolInventory,
-  isToolDisabled,
   listContextToolEntries,
-  listEnvDisabledTools,
-  saveDisabledToolOverrides,
 } from "./logic/tools";
 export { contextIndexSchema } from "./schema";
 export type {
@@ -24,5 +21,4 @@ export type {
   ContextToolInventory,
   ContextToolInventoryEntry,
   ContextToolResult,
-  ToolDisableSource,
 } from "./types";

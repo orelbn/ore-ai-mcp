@@ -1,2 +1,2 @@
 export { MCP_ROUTE } from "./constants";
-export { handleMcpRoute } from "./route";
+export { handleMcpRoute } from "./handler";

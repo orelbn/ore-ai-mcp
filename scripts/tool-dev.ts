@@ -1,5 +1,6 @@
-const workerPort = 8787;
-const workerUrl = `http://127.0.0.1:${workerPort}/mcp`;
+const defaultWorkerPort = 8787;
+const defaultWorkerUrl = `http://127.0.0.1:${defaultWorkerPort}/mcp`;
+const fallbackWorkerUrl = `http://localhost:${defaultWorkerPort}/mcp`;
 
 type ManagedProcess = ReturnType<typeof Bun.spawn>;
 
@@ -7,92 +8,67 @@ function log(message: string): void {
   console.log(`[tool:dev] ${message}`);
 }
 
-async function resolveSharedSecret(cwd: string): Promise<string> {
-  const explicitSecret = process.env.MCP_INTERNAL_SHARED_SECRET?.trim();
-  if (explicitSecret) {
-    return explicitSecret;
-  }
-
-  const devVarsPath = `${cwd}/.dev.vars`;
-  let rawText: string;
-
-  try {
-    rawText = await Bun.file(devVarsPath).text();
-  } catch {
-    throw new Error("Missing .dev.vars. Add MCP_INTERNAL_SHARED_SECRET before running tool:dev.");
-  }
-
-  for (const line of rawText.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) {
-      continue;
-    }
-
-    const separatorIndex = trimmed.indexOf("=");
-    if (separatorIndex <= 0) {
-      continue;
-    }
-
-    const key = trimmed.slice(0, separatorIndex).trim();
-    const value = trimmed
-      .slice(separatorIndex + 1)
-      .trim()
-      .replace(/^['"]|['"]$/g, "");
-    if (key === "MCP_INTERNAL_SHARED_SECRET" && value) {
-      return value;
-    }
-  }
-
-  throw new Error("Missing MCP_INTERNAL_SHARED_SECRET in .dev.vars.");
+function buildCandidateUrls(explicitUrl?: string): string[] {
+  return Array.from(
+    new Set(
+      [explicitUrl?.trim(), defaultWorkerUrl, fallbackWorkerUrl].filter((value): value is string =>
+        Boolean(value),
+      ),
+    ),
+  );
 }
 
-async function waitForWorker(url: string, sharedSecret: string, timeoutMs: number): Promise<void> {
+async function probeWorker(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        accept: "application/json, text/event-stream",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "tool-dev-probe",
+        method: "tools/list",
+        params: {},
+      }),
+    });
+
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function detectRunningWorker(candidateUrls: string[]): Promise<string | null> {
+  for (const candidateUrl of candidateUrls) {
+    if (await probeWorker(candidateUrl)) {
+      return candidateUrl;
+    }
+  }
+
+  return null;
+}
+
+async function waitForWorker(candidateUrls: string[], timeoutMs: number): Promise<string> {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          accept: "application/json, text/event-stream",
-          "content-type": "application/json",
-          "cf-worker": "ore-ai",
-          "x-ore-internal-secret": sharedSecret,
-          "x-ore-request-id": "tool-dev-probe",
-          "x-ore-user-id": "tool-dev",
-        },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: "tool-dev-probe",
-          method: "tools/list",
-          params: {},
-        }),
-      });
-
-      if (response.ok) {
-        return;
-      }
-    } catch {
-      // Keep polling until the worker is ready or the timeout elapses.
+    const detectedUrl = await detectRunningWorker(candidateUrls);
+    if (detectedUrl) {
+      return detectedUrl;
     }
 
     await Bun.sleep(250);
   }
 
-  throw new Error(`Timed out waiting for local MCP worker at ${url}.`);
+  throw new Error(`Timed out waiting for a local MCP worker at ${candidateUrls.join(", ")}.`);
 }
 
-function spawnManagedProcess(
-  cmd: string[],
-  cwd: string,
-  env?: Record<string, string>,
-): ManagedProcess {
+function spawnManagedProcess(cmd: string[], cwd: string): ManagedProcess {
   return Bun.spawn(cmd, {
     cwd,
-    env: {
-      ...process.env,
-      ...env,
-    },
+    env: process.env,
     stdin: "inherit",
     stdout: "inherit",
     stderr: "inherit",
@@ -113,9 +89,10 @@ async function stopProcess(
 
 async function main(): Promise<void> {
   const cwd = process.cwd();
-  const sharedSecret = await resolveSharedSecret(cwd);
-  let localServer: ManagedProcess | null = null;
+  const candidateUrls = buildCandidateUrls(process.env.INTERNAL_MCP_LOCAL_URL);
   let worker: ManagedProcess | null = null;
+  let inspector: ManagedProcess | null = null;
+  let startedWorker = false;
   let shuttingDown = false;
 
   async function shutdown(signal: NodeJS.Signals): Promise<void> {
@@ -125,8 +102,10 @@ async function main(): Promise<void> {
 
     shuttingDown = true;
     log(`Shutting down after ${signal}...`);
-    await stopProcess(localServer, signal);
-    await stopProcess(worker, signal);
+    await stopProcess(inspector, signal);
+    if (startedWorker) {
+      await stopProcess(worker, signal);
+    }
     process.exit(0);
   }
 
@@ -139,49 +118,48 @@ async function main(): Promise<void> {
   });
 
   try {
-    log(`Starting local Cloudflare worker on port ${workerPort}...`);
-    worker = spawnManagedProcess(["bunx", "wrangler", "dev", "--port", `${workerPort}`], cwd);
+    let workerUrl = await detectRunningWorker(candidateUrls);
+    if (workerUrl) {
+      log(`Reusing running local MCP server at ${workerUrl}.`);
+    } else {
+      log(`Starting local Cloudflare worker on port ${defaultWorkerPort}...`);
+      startedWorker = true;
+      worker = spawnManagedProcess(["vp", "run", "dev"], cwd);
 
-    const workerExit = worker.exited.then((exitCode) => {
-      if (!shuttingDown) {
-        throw new Error(`Local Cloudflare worker exited early with code ${exitCode}.`);
-      }
-    });
-
-    log("Waiting for the local MCP endpoint...");
-    await Promise.race([waitForWorker(workerUrl, sharedSecret, 20_000), workerExit]);
-
-    log("Building local MCP dashboard...");
-    const buildResult = Bun.spawnSync({
-      cmd: ["vp", "build", "internal/local-mcp-dev/ui"],
-      cwd,
-      stdout: "inherit",
-      stderr: "inherit",
-    });
-
-    if (buildResult.exitCode !== 0) {
-      throw new Error(`Dashboard build failed with code ${buildResult.exitCode}.`);
+      log("Waiting for the local MCP endpoint...");
+      workerUrl = await waitForWorker(candidateUrls, 20_000);
     }
 
-    log("Starting local MCP dashboard server...");
-    localServer = spawnManagedProcess(["bun", "run", "internal/local-mcp-dev/server.ts"], cwd, {
-      INTERNAL_MCP_LOCAL_URL: workerUrl,
-    });
+    if (!workerUrl) {
+      throw new Error("Unable to resolve a local MCP server URL.");
+    }
+
+    log(`Starting MCP Inspector for ${workerUrl}...`);
+    inspector = spawnManagedProcess(
+      ["bunx", "@modelcontextprotocol/inspector", "--transport", "http", "--server-url", workerUrl],
+      cwd,
+    );
 
     const firstExit = await Promise.race([
-      localServer.exited.then((exitCode) => ({
-        name: "dashboard" as const,
+      inspector.exited.then((exitCode) => ({
+        name: "inspector" as const,
         exitCode,
       })),
-      worker.exited.then((exitCode) => ({
-        name: "worker" as const,
-        exitCode,
-      })),
+      ...(worker
+        ? [
+            worker.exited.then((exitCode) => ({
+              name: "worker" as const,
+              exitCode,
+            })),
+          ]
+        : []),
     ]);
 
     if (!shuttingDown) {
-      await stopProcess(localServer, "SIGTERM");
-      await stopProcess(worker, "SIGTERM");
+      await stopProcess(inspector, "SIGTERM");
+      if (startedWorker) {
+        await stopProcess(worker, "SIGTERM");
+      }
       if (firstExit.exitCode === 0) {
         process.exit(0);
       }
@@ -189,8 +167,10 @@ async function main(): Promise<void> {
     }
   } finally {
     if (!shuttingDown) {
-      await stopProcess(localServer, "SIGTERM");
-      await stopProcess(worker, "SIGTERM");
+      await stopProcess(inspector, "SIGTERM");
+      if (startedWorker) {
+        await stopProcess(worker, "SIGTERM");
+      }
     }
   }
 }

@@ -5,13 +5,8 @@ import { executeTool } from "./execute-tool";
 
 const context: RequestContext = {
   env: {
-    MCP_INTERNAL_SHARED_SECRET: "secret",
-    MCP_ALLOWED_CALLER: "ore-ai",
     CONTEXT_BUCKET: createMockR2Bucket({}),
   },
-  userId: "user_123",
-  requestId: "req_123",
-  callerWorker: "ore-ai",
 };
 
 describe("executeTool", () => {
