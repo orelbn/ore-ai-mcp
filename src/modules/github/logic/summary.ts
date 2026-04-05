@@ -8,13 +8,12 @@ import {
 } from "../repo/project-insights-kv";
 import type { GitHubInsightsConfig, ProjectSummaryResult } from "../types";
 import {
-  applySummaryOverride,
   buildHeuristicArchitectureDraft,
   buildHeuristicSummaryDraft,
-  computeOverrideSignature,
-  requireRepoName,
   sourceUpdatedAt,
-} from "./shared";
+} from "./heuristics";
+import { applySummaryOverride, computeOverrideSignature } from "./overrides";
+import { requireRepoName } from "./repo";
 
 export async function getProjectSummary(
   config: GitHubInsightsConfig,

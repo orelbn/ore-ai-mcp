@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { requireRepoName } from "@/modules/github/logic/shared";
+import { requireRepoName } from "@/modules/github/logic/repo";
 import { projectOverrideKey } from "@/modules/github/repo/project-insights-kv";
 import { projectInsightOverrideSchema } from "@/modules/github/schema";
 import type { ProjectInsightOverride } from "@/modules/github/types";
