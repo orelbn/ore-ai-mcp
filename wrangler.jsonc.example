@@ -13,6 +13,12 @@
 	"observability": {
 		"enabled": true
 	},
+	"kv_namespaces": [
+		{
+			"binding": "PROJECT_INSIGHTS_KV",
+			"id": "your-project-insights-kv-dev"
+		}
+	],
 	"r2_buckets": [
 		{
 			"binding": "CONTEXT_BUCKET",
@@ -20,19 +26,37 @@
 			"preview_bucket_name": "your-context-bucket-dev"
 		}
 	],
+	"vars": {
+		"GITHUB_OWNER": "your-github-username",
+		"GITHUB_CACHE_TTL_SECONDS": "43200",
+		"GITHUB_INSIGHTS_PROVIDER": "google",
+		"GITHUB_INSIGHTS_MODEL": "gemini-3.1-flash-lite-preview"
+	},
 	"env": {
 		"production": {
 			"name": "ore-ai-mcp",
 			"observability": {
 				"enabled": true
 			},
+			"kv_namespaces": [
+				{
+					"binding": "PROJECT_INSIGHTS_KV",
+					"id": "your-project-insights-kv-production"
+				}
+			],
 			"r2_buckets": [
 				{
 					"binding": "CONTEXT_BUCKET",
 					"bucket_name": "your-context-bucket-production",
 					"preview_bucket_name": "your-context-bucket-production"
 				}
-			]
+			],
+			"vars": {
+				"GITHUB_OWNER": "your-github-username",
+				"GITHUB_CACHE_TTL_SECONDS": "43200",
+				"GITHUB_INSIGHTS_PROVIDER": "google",
+				"GITHUB_INSIGHTS_MODEL": "gemini-3.1-flash-lite-preview"
+			}
 		}
 	}
 }
