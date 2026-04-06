@@ -5,7 +5,7 @@
 1. Install dependencies:
 
 ```bash
-bun install
+vp install
 ```
 
 2. Create local config:
@@ -14,12 +14,12 @@ bun install
 cp wrangler.jsonc.example wrangler.jsonc
 ```
 
-3. Edit `wrangler.jsonc` with your local bucket names.
+3. Edit `wrangler.jsonc` with the context bucket this repo should use by default.
 
 4. Start the MCP server:
 
 ```bash
-vp run dev
+vpr dev
 ```
 
 This starts the local Cloudflare worker and serves the MCP endpoint on `http://127.0.0.1:8787/mcp`.
@@ -29,10 +29,10 @@ This starts the local Cloudflare worker and serves the MCP endpoint on `http://1
 If you want to inspect the running MCP server with the official MCP Inspector, run:
 
 ```bash
-vp run tool:dev
+vpr tool:dev
 ```
 
-`tool:dev` reuses an already-running local worker when possible. If no local MCP server is reachable, it starts `vp run dev` first and then launches Inspector against the detected `/mcp` endpoint.
+`tool:dev` reuses an already-running local worker when possible. If no local MCP server is reachable, it starts `vpr dev` first and then launches Inspector against the detected `/mcp` endpoint.
 
 ## Local Config
 
@@ -47,28 +47,3 @@ Important values:
 Useful optional env vars:
 
 - `INTERNAL_MCP_LOCAL_URL`
-
-## Context Commands
-
-```bash
-vp run context:validate
-vp run context:sync -- --dry-run
-vp run context:sync
-vp run context:sync -- --env production --dry-run
-vp run context:sync -- --env production
-```
-
-## Checks
-
-```bash
-vp check
-vp test
-vp build
-wrangler deploy --dry-run --env=""
-```
-
-## Deploy
-
-```bash
-wrangler deploy --env production
-```

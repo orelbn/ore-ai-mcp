@@ -24,9 +24,9 @@ Real context content is local-only and gitignored. Safe starter files live in `.
 The normal local workflow is:
 
 ```bash
-bun install
+vp install
 cp wrangler.jsonc.example wrangler.jsonc
-vp run dev
+vpr dev
 ```
 
 That starts the MCP server only.
@@ -34,7 +34,7 @@ That starts the MCP server only.
 If you want to inspect the local server with the official MCP Inspector, run:
 
 ```bash
-vp run tool:dev
+vpr tool:dev
 ```
 
 See [DEVELOPMENT.md](./DEVELOPMENT.md) for setup details.
