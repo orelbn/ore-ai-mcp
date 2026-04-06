@@ -16,23 +16,8 @@
 	"r2_buckets": [
 		{
 			"binding": "CONTEXT_BUCKET",
-			"bucket_name": "your-context-bucket-dev",
-			"preview_bucket_name": "your-context-bucket-dev"
+			"bucket_name": "your-context-bucket",
+			"preview_bucket_name": "your-context-bucket"
 		}
-	],
-	"env": {
-		"production": {
-			"name": "ore-ai-mcp",
-			"observability": {
-				"enabled": true
-			},
-			"r2_buckets": [
-				{
-					"binding": "CONTEXT_BUCKET",
-					"bucket_name": "your-context-bucket-production",
-					"preview_bucket_name": "your-context-bucket-production"
-				}
-			]
-		}
-	}
+	]
 }

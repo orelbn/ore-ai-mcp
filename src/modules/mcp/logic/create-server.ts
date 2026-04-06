@@ -21,7 +21,7 @@ function toSuccessResult(summary: string, payload: unknown): CallToolResult {
   };
 }
 
-export async function createOreMcpServer(context: RequestContext): Promise<McpServer> {
+export async function createOreMcpServer(context: RequestContext) {
   const server = new McpServer({
     name: ORE_MCP_SERVER_NAME,
     version: ORE_MCP_SERVER_VERSION,
