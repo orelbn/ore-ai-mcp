@@ -12,6 +12,7 @@ const ignorePatterns = [
 ];
 
 export default defineConfig({
+  staged: { "*": "vp check --fix" },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src/", import.meta.url)),
