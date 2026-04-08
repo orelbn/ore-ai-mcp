@@ -22,6 +22,53 @@ export function resolveProjectInsightsRoot(repoRoot: string): string {
   return join(repoRoot, PROJECT_INSIGHTS_DIR);
 }
 
+function readOverrideJson(filePath: string): unknown {
+  try {
+    return JSON.parse(readFileSync(filePath, "utf8"));
+  } catch (error) {
+    throw new Error(`Override file is not valid JSON: ${filePath}`, { cause: error });
+  }
+}
+
+function parseOverrideFile(filePath: string): LocalProjectOverride {
+  const parsed = projectInsightOverrideSchema.safeParse(readOverrideJson(filePath));
+  if (!parsed.success) {
+    throw new Error(
+      `Override schema validation failed for ${filePath}: ${parsed.error.issues
+        .map((issue) => issue.message)
+        .join("; ")}`,
+    );
+  }
+
+  const normalizedRepo = requireRepoName(parsed.data.repo);
+  return {
+    filePath,
+    override: {
+      ...parsed.data,
+      repo: normalizedRepo,
+    },
+    remoteKey: projectOverrideKey(normalizedRepo),
+  };
+}
+
+function assertNoDuplicateTargets(overrides: LocalProjectOverride[]) {
+  const duplicatePathsByRemoteKey = new Map<string, string[]>();
+  for (const override of overrides) {
+    const filePaths = duplicatePathsByRemoteKey.get(override.remoteKey) ?? [];
+    filePaths.push(override.filePath);
+    duplicatePathsByRemoteKey.set(override.remoteKey, filePaths);
+  }
+
+  const messages = [...duplicatePathsByRemoteKey.entries()]
+    .filter(([, filePaths]) => filePaths.length > 1)
+    .map(([remoteKey, filePaths]) => `${remoteKey} (${filePaths.join(", ")})`)
+    .sort((left, right) => left.localeCompare(right));
+
+  if (messages.length > 0) {
+    throw new Error(`Duplicate override targets: ${messages.join("; ")}`);
+  }
+}
+
 export function loadLocalProjectOverrides(repoRoot: string): LocalProjectOverride[] {
   const root = resolveProjectInsightsRoot(repoRoot);
   if (!existsSync(root)) {
@@ -31,52 +78,9 @@ export function loadLocalProjectOverrides(repoRoot: string): LocalProjectOverrid
   const overrides = readdirSync(root)
     .filter((entry) => entry.toLowerCase().endsWith(".json"))
     .sort((left, right) => left.localeCompare(right))
-    .map((entry) => {
-      const filePath = join(root, entry);
-      const raw = readFileSync(filePath, "utf8");
-      let json: unknown;
-      try {
-        json = JSON.parse(raw);
-      } catch (error) {
-        throw new Error(`Override file is not valid JSON: ${filePath}`, {
-          cause: error,
-        });
-      }
-      const parsed = projectInsightOverrideSchema.safeParse(json);
-      if (!parsed.success) {
-        throw new Error(
-          `Override schema validation failed for ${filePath}: ${parsed.error.issues
-            .map((issue) => issue.message)
-            .join("; ")}`,
-        );
-      }
-      const normalizedRepo = requireRepoName(parsed.data.repo);
-      return {
-        filePath,
-        override: {
-          ...parsed.data,
-          repo: normalizedRepo,
-        },
-        remoteKey: projectOverrideKey(normalizedRepo),
-      };
-    });
+    .map((entry) => parseOverrideFile(join(root, entry)));
 
-  const duplicatePathsByRemoteKey = new Map<string, string[]>();
-  for (const override of overrides) {
-    const nextPaths = duplicatePathsByRemoteKey.get(override.remoteKey) ?? [];
-    nextPaths.push(override.filePath);
-    duplicatePathsByRemoteKey.set(override.remoteKey, nextPaths);
-  }
-
-  const duplicateTargets = [...duplicatePathsByRemoteKey.entries()]
-    .filter(([, filePaths]) => filePaths.length > 1)
-    .map(([remoteKey, filePaths]) => `${remoteKey} (${filePaths.join(", ")})`)
-    .sort((left, right) => left.localeCompare(right));
-
-  if (duplicateTargets.length > 0) {
-    throw new Error(`Duplicate override targets: ${duplicateTargets.join("; ")}`);
-  }
-
+  assertNoDuplicateTargets(overrides);
   return overrides;
 }
 

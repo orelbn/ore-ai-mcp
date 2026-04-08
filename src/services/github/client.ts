@@ -68,6 +68,40 @@ function decodeContent(payload: GitHubReadmeApiResponse | null): string | null {
     .trim();
 }
 
+function toProjectListItem(repo: GitHubRepoApiItem): ProjectListItem {
+  return {
+    name: repo.name,
+    fullName: repo.full_name,
+    url: repo.html_url,
+    description: repo.description ?? "",
+    homepageUrl: repo.homepage ?? "",
+    primaryLanguage: repo.language ?? "",
+    topics: repo.topics ?? [],
+    stars: repo.stargazers_count,
+    pushedAt: repo.pushed_at,
+    updatedAt: repo.updated_at,
+  };
+}
+
+function isVisibleProject(repo: GitHubRepoApiItem): boolean {
+  return !repo.fork && !repo.archived && !repo.disabled;
+}
+
+async function fetchRepoPage(config: GitHubInsightsConfig, page: number) {
+  return fetchGitHubJson<GitHubRepoApiItem[]>(
+    config,
+    `/users/${config.owner}/repos?sort=pushed&direction=desc&per_page=100&type=owner&page=${page}`,
+  );
+}
+
+function takeLatestProjects(repos: GitHubRepoApiItem[], limit: number): ProjectListItem[] {
+  return repos
+    .filter(isVisibleProject)
+    .sort((left, right) => right.pushed_at.localeCompare(left.pushed_at))
+    .slice(0, limit)
+    .map(toProjectListItem);
+}
+
 export async function listLatestPublicRepos(
   config: GitHubInsightsConfig,
   limit = DEFAULT_GITHUB_LATEST_LIMIT,
@@ -75,37 +109,52 @@ export async function listLatestPublicRepos(
   const repos: GitHubRepoApiItem[] = [];
 
   for (let page = 1; page <= DEFAULT_GITHUB_MAX_PAGES; page++) {
-    const chunk = await fetchGitHubJson<GitHubRepoApiItem[]>(
-      config,
-      `/users/${config.owner}/repos?sort=pushed&direction=desc&per_page=100&type=owner&page=${page}`,
-    );
+    const chunk = await fetchRepoPage(config, page);
     if (!chunk?.length) {
       break;
     }
+
     repos.push(...chunk);
-    if (repos.filter((repo) => !repo.fork && !repo.archived && !repo.disabled).length >= limit) {
+    if (repos.filter(isVisibleProject).length >= limit) {
       break;
     }
   }
 
-  return repos
-    .filter((repo) => !repo.fork && !repo.archived && !repo.disabled)
-    .sort((left, right) => right.pushed_at.localeCompare(left.pushed_at))
-    .slice(0, limit)
-    .map(
-      (repo): ProjectListItem => ({
-        name: repo.name,
-        fullName: repo.full_name,
-        url: repo.html_url,
-        description: repo.description ?? "",
-        homepageUrl: repo.homepage ?? "",
-        primaryLanguage: repo.language ?? "",
-        topics: repo.topics ?? [],
-        stars: repo.stargazers_count,
-        pushedAt: repo.pushed_at,
-        updatedAt: repo.updated_at,
-      }),
-    );
+  return takeLatestProjects(repos, limit);
+}
+
+async function readManifestContent(
+  config: GitHubInsightsConfig,
+  basePath: string,
+  entry: GitHubRepoApiFile,
+) {
+  const payload = await fetchGitHubJson<GitHubReadmeApiResponse>(
+    config,
+    `${basePath}/contents/${entry.path}`,
+    true,
+  );
+  const content = decodeContent(payload);
+  return content ? ([entry.name, content] as const) : null;
+}
+
+function pickManifestEntries(rootEntries: GitHubRepoApiFile[]): GitHubRepoApiFile[] {
+  return rootEntries.filter(
+    (entry) => entry.type === "file" && ROOT_MANIFEST_FILES.includes(entry.name as never),
+  );
+}
+
+async function loadManifestContents(
+  config: GitHubInsightsConfig,
+  basePath: string,
+  rootEntries: GitHubRepoApiFile[],
+) {
+  const manifestPairs = await Promise.all(
+    pickManifestEntries(rootEntries).map((entry) => readManifestContent(config, basePath, entry)),
+  );
+
+  return Object.fromEntries(
+    manifestPairs.filter((pair): pair is readonly [string, string] => pair !== null),
+  );
 }
 
 export async function loadRepoSource(
@@ -120,30 +169,11 @@ export async function loadRepoSource(
     fetchGitHubJson<GitHubRepoApiFile[]>(config, `${basePath}/contents`),
   ]);
 
-  const manifestEntries =
-    rootEntries?.filter(
-      (entry) => entry.type === "file" && ROOT_MANIFEST_FILES.includes(entry.name as never),
-    ) ?? [];
-  const manifestPairs = await Promise.all(
-    manifestEntries.map(async (entry) => {
-      const content = decodeContent(
-        await fetchGitHubJson<GitHubReadmeApiResponse>(
-          config,
-          `${basePath}/contents/${entry.path}`,
-          true,
-        ),
-      );
-      return content ? ([entry.name, content] as const) : null;
-    }),
-  );
-
   return {
     repo: repoInfo as GitHubRepoApiItem,
     readme: decodeContent(readme),
     languages: languages ?? {},
     rootEntries: rootEntries ?? [],
-    manifestContents: Object.fromEntries(
-      manifestPairs.filter((pair): pair is readonly [string, string] => pair !== null),
-    ),
+    manifestContents: await loadManifestContents(config, basePath, rootEntries ?? []),
   };
 }

@@ -52,7 +52,6 @@ describe("registerGitHubTools", () => {
       createContext({
         PROJECT_INSIGHTS_KV: createMockKVNamespace(),
         GITHUB_OWNER: "example",
-        GITHUB_INSIGHTS_PROVIDER: "heuristic",
       }),
     );
 

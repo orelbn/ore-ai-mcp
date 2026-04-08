@@ -6,7 +6,6 @@ export type Env = {
   GITHUB_OWNER?: string;
   GITHUB_CACHE_TTL_SECONDS?: string;
   GITHUB_TOKEN?: string;
-  GITHUB_INSIGHTS_PROVIDER?: string;
   GITHUB_INSIGHTS_MODEL?: string;
   GEMINI_API_KEY?: string;
 };

@@ -37,7 +37,6 @@ export function createGitHubConfig(
   return {
     owner: "example",
     cacheTtlSeconds: 43_200,
-    provider: "heuristic",
     model: "gemini-3.1-flash-lite-preview",
     githubToken: null,
     geminiApiKey: null,

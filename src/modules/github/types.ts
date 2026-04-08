@@ -11,7 +11,6 @@ export type {
   ProjectSummaryResult,
 } from "./schema";
 
-export type GitHubInsightsProvider = "heuristic" | "google";
 export type ProjectInsightKind = "summary" | "architecture";
 
 export type GitHubRepoApiItem = {
@@ -53,7 +52,6 @@ export type GitHubRepoSource = {
 export type GitHubInsightsConfig = {
   owner: string;
   cacheTtlSeconds: number;
-  provider: GitHubInsightsProvider;
   model: string;
   githubToken: string | null;
   geminiApiKey: string | null;

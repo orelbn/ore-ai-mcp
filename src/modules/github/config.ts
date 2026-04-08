@@ -1,11 +1,7 @@
 import { AppError } from "@/lib/errors";
 import type { Env } from "@/lib/worker";
-import {
-  DEFAULT_GITHUB_CACHE_TTL_SECONDS,
-  DEFAULT_GITHUB_INSIGHTS_MODEL,
-  DEFAULT_GITHUB_INSIGHTS_PROVIDER,
-} from "./constants";
-import type { GitHubInsightsConfig, GitHubInsightsProvider } from "./types";
+import { DEFAULT_GITHUB_CACHE_TTL_SECONDS, DEFAULT_GITHUB_INSIGHTS_MODEL } from "./constants";
+import type { GitHubInsightsConfig } from "./types";
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) {
@@ -16,16 +12,6 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
     return fallback;
   }
   return parsed;
-}
-
-function normalizeProvider(value: string | undefined): GitHubInsightsProvider {
-  if (value === "heuristic") {
-    return "heuristic";
-  }
-  if (value === "google") {
-    return "google";
-  }
-  return DEFAULT_GITHUB_INSIGHTS_PROVIDER as GitHubInsightsProvider;
 }
 
 export function resolveGitHubInsightsConfig(env: Env): GitHubInsightsConfig | null {
@@ -40,7 +26,6 @@ export function resolveGitHubInsightsConfig(env: Env): GitHubInsightsConfig | nu
       env.GITHUB_CACHE_TTL_SECONDS,
       DEFAULT_GITHUB_CACHE_TTL_SECONDS,
     ),
-    provider: normalizeProvider(env.GITHUB_INSIGHTS_PROVIDER),
     model: env.GITHUB_INSIGHTS_MODEL?.trim() || DEFAULT_GITHUB_INSIGHTS_MODEL,
     githubToken: env.GITHUB_TOKEN?.trim() || null,
     geminiApiKey: env.GEMINI_API_KEY?.trim() || null,

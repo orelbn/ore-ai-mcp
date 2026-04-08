@@ -5,7 +5,6 @@ import type {
   GitHubInsightsConfig,
   GitHubRepoSource,
   ProjectArchitectureDraft,
-  ProjectInsightDraftByKind,
   ProjectInsightKind,
   ProjectInsightOverride,
   ProjectSummaryDraft,
@@ -37,64 +36,45 @@ function buildPrompt(input: InsightPromptInput): string {
   ].join("\n");
 }
 
-function modelEvidence(detail: string) {
+function modelEvidence(model: string) {
   return {
     type: "model" as const,
     label: "Gemini enrichment",
-    detail,
+    detail: `Generated with ${model}`,
   };
 }
 
-function getHeuristicDraft<K extends ProjectInsightKind>(
+function fallbackDraft<K extends ProjectInsightKind>(
   kind: K,
   input: InsightPromptInput,
-): ProjectInsightDraftByKind[K] {
-  if (kind === "summary") {
-    return {
-      ...input.summaryDraft,
-      provider: "heuristic",
-    } as ProjectInsightDraftByKind[K];
-  }
-
-  return {
-    ...input.architectureDraft,
-    provider: "heuristic",
-  } as ProjectInsightDraftByKind[K];
+): ProjectSummaryDraft | ProjectArchitectureDraft {
+  return kind === "summary" ? input.summaryDraft : input.architectureDraft;
 }
 
-export async function enrichProjectInsight<K extends ProjectInsightKind>(
-  config: GitHubInsightsConfig,
-  kind: K,
-  input: InsightPromptInput,
-): Promise<ProjectInsightDraftByKind[K]> {
-  if (!config.geminiApiKey || config.provider !== "google") {
-    return getHeuristicDraft(kind, input);
-  }
+async function enrichSummary(config: GitHubInsightsConfig, input: InsightPromptInput) {
+  const google = createGoogleGenerativeAI({ apiKey: config.geminiApiKey! });
+  const { object } = await generateObject({
+    model: google(config.model),
+    schema: googleSummarySchema,
+    prompt: `${buildPrompt(input)}\n\nReturn a concise project summary and the main technologies used.`,
+  });
 
-  const google = createGoogleGenerativeAI({ apiKey: config.geminiApiKey });
-  const prompt = buildPrompt(input);
+  return {
+    ...input.summaryDraft,
+    summary: object.summary,
+    technologies: object.technologies,
+    evidence: [...input.summaryDraft.evidence, modelEvidence(config.model)],
+    provider: "google" as const,
+  };
+}
 
-  if (kind === "summary") {
-    const { object } = await generateObject({
-      model: google(config.model),
-      schema: googleSummarySchema,
-      prompt: `${prompt}\n\nReturn a concise project summary and the main technologies used.`,
-    });
-
-    return {
-      ...input.summaryDraft,
-      summary: object.summary,
-      technologies: object.technologies,
-      evidence: [...input.summaryDraft.evidence, modelEvidence(`Generated with ${config.model}`)],
-      provider: "google",
-    } as ProjectInsightDraftByKind[K];
-  }
-
+async function enrichArchitecture(config: GitHubInsightsConfig, input: InsightPromptInput) {
+  const google = createGoogleGenerativeAI({ apiKey: config.geminiApiKey! });
   const { object } = await generateObject({
     model: google(config.model),
     schema: googleArchitectureSchema,
     prompt:
-      `${prompt}\n\nReturn a high-level architecture overview, a few major components, ` +
+      `${buildPrompt(input)}\n\nReturn a high-level architecture overview, a few major components, ` +
       "key design decisions, and a valid Mermaid flowchart.",
   });
 
@@ -104,10 +84,23 @@ export async function enrichProjectInsight<K extends ProjectInsightKind>(
     components: object.components,
     designDecisions: object.designDecisions,
     diagramMermaid: object.diagramMermaid,
-    evidence: [
-      ...input.architectureDraft.evidence,
-      modelEvidence(`Generated with ${config.model}`),
-    ],
-    provider: "google",
-  } as ProjectInsightDraftByKind[K];
+    evidence: [...input.architectureDraft.evidence, modelEvidence(config.model)],
+    provider: "google" as const,
+  };
+}
+
+export async function enrichProjectInsight<K extends ProjectInsightKind>(
+  config: GitHubInsightsConfig,
+  kind: K,
+  input: InsightPromptInput,
+): Promise<ProjectSummaryDraft | ProjectArchitectureDraft> {
+  if (!config.geminiApiKey) {
+    return fallbackDraft(kind, input);
+  }
+
+  if (kind === "summary") {
+    return enrichSummary(config, input);
+  }
+
+  return enrichArchitecture(config, input);
 }

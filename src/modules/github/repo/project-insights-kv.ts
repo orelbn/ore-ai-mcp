@@ -13,6 +13,10 @@ import type {
   ProjectInsightResultByKind,
 } from "../types";
 
+type JsonSchema<T> = {
+  safeParse(value: unknown): { success: true; data: T } | { success: false };
+};
+
 function ownerKey(owner: string) {
   return `${PROJECT_INSIGHTS_PREFIX}/owners/${owner}`;
 }
@@ -29,13 +33,7 @@ export function projectOverrideKey(repo: string) {
   return `${PROJECT_INSIGHTS_OVERRIDES_PREFIX}/${repo}.json`;
 }
 
-async function readJson<T>(
-  config: GitHubInsightsConfig,
-  key: string,
-  schema: {
-    safeParse(value: unknown): { success: true; data: T } | { success: false };
-  },
-) {
+async function readJson<T>(config: GitHubInsightsConfig, key: string, schema: JsonSchema<T>) {
   const raw = await config.kv.get(key);
   if (!raw) return null;
 
@@ -55,6 +53,13 @@ function writeJson(config: GitHubInsightsConfig, key: string, value: unknown) {
   return config.kv.put(key, JSON.stringify(value));
 }
 
+const projectDocumentSchemaByKind: {
+  [K in ProjectInsightKind]: JsonSchema<ProjectInsightResultByKind[K]>;
+} = {
+  summary: projectSummaryResultSchema,
+  architecture: projectArchitectureResultSchema,
+};
+
 export function isFresh(cachedAt: string, cacheTtlSeconds: number, now = Date.now()) {
   const cachedAtMs = Date.parse(cachedAt);
   return Number.isFinite(cachedAtMs) && now - cachedAtMs <= cacheTtlSeconds * 1000;
@@ -73,18 +78,10 @@ export function readProjectDocument<K extends ProjectInsightKind>(
   repo: string,
   kind: K,
 ) {
-  if (kind === "summary") {
-    return readJson(
-      config,
-      projectKey(config.owner, repo, kind),
-      projectSummaryResultSchema,
-    ) as Promise<ProjectInsightResultByKind[K] | null>;
-  }
-
   return readJson(
     config,
     projectKey(config.owner, repo, kind),
-    projectArchitectureResultSchema,
+    projectDocumentSchemaByKind[kind],
   ) as Promise<ProjectInsightResultByKind[K] | null>;
 }
 

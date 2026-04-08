@@ -29,7 +29,6 @@
 	"vars": {
 		"GITHUB_OWNER": "your-github-username",
 		"GITHUB_CACHE_TTL_SECONDS": "43200",
-		"GITHUB_INSIGHTS_PROVIDER": "google",
 		"GITHUB_INSIGHTS_MODEL": "gemini-3.1-flash-lite-preview"
 	}
 }
