@@ -97,3 +97,12 @@ export const googleArchitectureSchema = z.object({
   designDecisions: z.array(projectDesignDecisionSchema).min(1),
   diagramMermaid: z.string().min(1),
 });
+
+export type ProjectEvidence = z.infer<typeof projectEvidenceSchema>;
+export type ProjectComponent = z.infer<typeof projectComponentSchema>;
+export type ProjectDesignDecision = z.infer<typeof projectDesignDecisionSchema>;
+export type ProjectListItem = z.infer<typeof projectListItemSchema>;
+export type LatestProjectsResult = z.infer<typeof latestProjectsResultSchema>;
+export type ProjectSummaryResult = z.infer<typeof projectSummaryResultSchema>;
+export type ProjectArchitectureResult = z.infer<typeof projectArchitectureResultSchema>;
+export type ProjectInsightOverride = z.infer<typeof projectInsightOverrideSchema>;

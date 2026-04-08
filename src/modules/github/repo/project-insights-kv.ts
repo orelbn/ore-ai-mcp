@@ -9,11 +9,9 @@ import {
 import type {
   GitHubInsightsConfig,
   LatestProjectsResult,
-  ProjectArchitectureResult,
-  ProjectSummaryResult,
+  ProjectInsightKind,
+  ProjectInsightResultByKind,
 } from "../types";
-
-type ProjectDocumentKind = "summary" | "architecture";
 
 function ownerKey(owner: string) {
   return `${PROJECT_INSIGHTS_PREFIX}/owners/${owner}`;
@@ -23,7 +21,7 @@ export function latestProjectsKey(owner: string) {
   return `${ownerKey(owner)}/latest.json`;
 }
 
-function projectKey(owner: string, repo: string, kind: ProjectDocumentKind) {
+function projectKey(owner: string, repo: string, kind: ProjectInsightKind) {
   return `${ownerKey(owner)}/repos/${repo}/${kind}.json`;
 }
 
@@ -57,26 +55,6 @@ function writeJson(config: GitHubInsightsConfig, key: string, value: unknown) {
   return config.kv.put(key, JSON.stringify(value));
 }
 
-function readProjectDocument<T>(
-  config: GitHubInsightsConfig,
-  repo: string,
-  kind: ProjectDocumentKind,
-  schema: {
-    safeParse(value: unknown): { success: true; data: T } | { success: false };
-  },
-) {
-  return readJson(config, projectKey(config.owner, repo, kind), schema);
-}
-
-function writeProjectDocument(
-  config: GitHubInsightsConfig,
-  repo: string,
-  kind: ProjectDocumentKind,
-  document: unknown,
-) {
-  return writeJson(config, projectKey(config.owner, repo, kind), document);
-}
-
 export function isFresh(cachedAt: string, cacheTtlSeconds: number, now = Date.now()) {
   const cachedAtMs = Date.parse(cachedAt);
   return Number.isFinite(cachedAtMs) && now - cachedAtMs <= cacheTtlSeconds * 1000;
@@ -90,23 +68,32 @@ export function writeLatestProjects(config: GitHubInsightsConfig, document: Late
   return writeJson(config, latestProjectsKey(config.owner), document);
 }
 
-export function readProjectSummary(config: GitHubInsightsConfig, repo: string) {
-  return readProjectDocument(config, repo, "summary", projectSummaryResultSchema);
-}
-
-export function writeProjectSummary(config: GitHubInsightsConfig, document: ProjectSummaryResult) {
-  return writeProjectDocument(config, document.repo, "summary", document);
-}
-
-export function readProjectArchitecture(config: GitHubInsightsConfig, repo: string) {
-  return readProjectDocument(config, repo, "architecture", projectArchitectureResultSchema);
-}
-
-export function writeProjectArchitecture(
+export function readProjectDocument<K extends ProjectInsightKind>(
   config: GitHubInsightsConfig,
-  document: ProjectArchitectureResult,
+  repo: string,
+  kind: K,
 ) {
-  return writeProjectDocument(config, document.repo, "architecture", document);
+  if (kind === "summary") {
+    return readJson(
+      config,
+      projectKey(config.owner, repo, kind),
+      projectSummaryResultSchema,
+    ) as Promise<ProjectInsightResultByKind[K] | null>;
+  }
+
+  return readJson(
+    config,
+    projectKey(config.owner, repo, kind),
+    projectArchitectureResultSchema,
+  ) as Promise<ProjectInsightResultByKind[K] | null>;
+}
+
+export function writeProjectDocument<K extends ProjectInsightKind>(
+  config: GitHubInsightsConfig,
+  kind: K,
+  document: ProjectInsightResultByKind[K],
+) {
+  return writeJson(config, projectKey(config.owner, document.repo, kind), document);
 }
 
 export function readProjectOverride(config: GitHubInsightsConfig, repo: string) {

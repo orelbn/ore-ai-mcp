@@ -7,6 +7,7 @@ import {
   loadLocalProjectOverrides,
   planDeletedOverrideKeys,
 } from "../scripts/github-insights-lib";
+import { syncProjectInsights } from "../scripts/github-insights-sync";
 
 function withOverrides(
   files: Record<string, unknown>,
@@ -81,5 +82,52 @@ describe("github insights sync planning", () => {
         ]);
       },
     );
+  });
+
+  it("runs the sync entry point in dry-run mode without calling wrangler writes", async () => {
+    await new Promise<void>((resolve, reject) => {
+      withOverrides(
+        {
+          "repo-a.json": { repo: "example/repo-a", summary: "normalized" },
+        },
+        async (repoRoot, overridesRoot) => {
+          try {
+            const logs: string[] = [];
+            const wranglerCalls: string[] = [];
+
+            await syncProjectInsights(
+              repoRoot,
+              { env: "production", dryRun: true, local: false },
+              {
+                runWranglerCommand(command) {
+                  wranglerCalls.push(command.join(" "));
+                  throw new Error("No KV value found");
+                },
+                log(message) {
+                  logs.push(message);
+                },
+              },
+            );
+
+            expect(wranglerCalls).toEqual([
+              "kv key get github-insights/v1/overrides/_meta/index.json --binding PROJECT_INSIGHTS_KV --text --env production --remote",
+            ]);
+            expect(logs).toEqual(
+              expect.arrayContaining([
+                "Environment: production",
+                "Mode: dry-run",
+                "Override count: 1",
+                "Delete count: 0",
+                `UPLOAD github-insights/v1/overrides/repo-a.json <= ${join(overridesRoot, "repo-a.json")}`,
+                "UPLOAD github-insights/v1/overrides/_meta/index.json <= <generated>",
+              ]),
+            );
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        },
+      );
+    });
   });
 });

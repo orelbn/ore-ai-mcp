@@ -46,6 +46,20 @@ export function createGitHubConfig(
   };
 }
 
+export function createGitHubConfigWithJsonKv(
+  entries: Record<string, unknown> = {},
+  overrides: Partial<GitHubInsightsConfig> = {},
+): GitHubInsightsConfig {
+  return createGitHubConfig({
+    kv: createMockKVNamespace(
+      Object.fromEntries(
+        Object.entries(entries).map(([key, value]) => [key, JSON.stringify(value)]),
+      ),
+    ),
+    ...overrides,
+  });
+}
+
 export function mockRepoSourceFetch({
   repo = {},
   readme = null,

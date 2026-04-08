@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it } from "vite-plus/test";
-import { createMockKVNamespace } from "@mocks/kv-namespace";
-import { createGitHubConfig, mockRepoSourceFetch } from "../test-helpers";
-import { getProjectArchitecture } from "./architecture";
+import {
+  createGitHubConfig,
+  createGitHubConfigWithJsonKv,
+  mockRepoSourceFetch,
+} from "../test-helpers";
+import { getProjectArchitecture } from "./insight";
 
 const originalFetch = globalThis.fetch;
 const repo = "repo-one";
@@ -29,18 +32,16 @@ afterEach(() => {
 });
 
 function configWithOverride(override?: Record<string, unknown>) {
-  return createGitHubConfig({
-    kv: createMockKVNamespace(
-      override
-        ? {
-            [`github-insights/v1/overrides/${repo}.json`]: JSON.stringify({
-              repo,
-              ...override,
-            }),
-          }
-        : {},
-    ),
-  });
+  return createGitHubConfigWithJsonKv(
+    override
+      ? {
+          [`github-insights/v1/overrides/${repo}.json`]: {
+            repo,
+            ...override,
+          },
+        }
+      : {},
+  );
 }
 
 async function loadArchitecture(options?: {
@@ -65,7 +66,7 @@ describe("getProjectArchitecture", () => {
         responsibility: "Implements application logic and server-side endpoints.",
       },
     ]);
-    expect(result.designDecisions.map((decision) => decision.title)).toEqual([
+    expect(result.designDecisions.map((decision: { title: string }) => decision.title)).toEqual([
       "Edge-first deployment",
       "README-driven onboarding",
     ]);

@@ -1,7 +1,6 @@
-import { afterEach, describe, expect, it } from "vite-plus/test";
-import { createMockKVNamespace } from "@mocks/kv-namespace";
-import { createGitHubConfig, mockRepoSourceFetch } from "../test-helpers";
-import { getProjectSummary } from "./summary";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { createGitHubConfigWithJsonKv, mockRepoSourceFetch } from "../test-helpers";
+import { getProjectSummary } from "./insight";
 
 const originalFetch = globalThis.fetch;
 const repo = "repo-one";
@@ -9,16 +8,6 @@ const repo = "repo-one";
 afterEach(() => {
   globalThis.fetch = originalFetch;
 });
-
-function configWithKv(entries: Record<string, unknown> = {}) {
-  return createGitHubConfig({
-    kv: createMockKVNamespace(
-      Object.fromEntries(
-        Object.entries(entries).map(([key, value]) => [key, JSON.stringify(value)]),
-      ),
-    ),
-  });
-}
 
 async function loadSummary(entries?: Record<string, unknown>) {
   mockRepoSourceFetch({
@@ -41,10 +30,39 @@ async function loadSummary(entries?: Record<string, unknown>) {
       "wrangler.jsonc": '{"name":"repo-one"}',
     },
   });
-  return getProjectSummary(configWithKv(entries), repo);
+  return getProjectSummary(createGitHubConfigWithJsonKv(entries), repo);
 }
 
 describe("getProjectSummary", () => {
+  it("returns a fresh cached summary without refetching GitHub", async () => {
+    const fetchMock = vi.fn(async () => {
+      throw new Error("fetch should not be called for a fresh cache hit");
+    }) as unknown as typeof fetch;
+    globalThis.fetch = fetchMock;
+
+    const result = await getProjectSummary(
+      createGitHubConfigWithJsonKv({
+        [`github-insights/v1/owners/example/repos/${repo}/summary.json`]: {
+          repo,
+          name: "repo-one",
+          summary: "Cached summary",
+          technologies: ["TypeScript", "Cloudflare Workers"],
+          evidence: [],
+          provider: "heuristic",
+          overrideSignature: null,
+          cachedAt: "2099-03-10T00:00:00.000Z",
+          sourceUpdatedAt: "2026-03-10T00:00:00.000Z",
+          stale: false,
+        },
+      }),
+      repo,
+    );
+
+    expect(result.summary).toBe("Cached summary");
+    expect(result.stale).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("builds a heuristic summary from GitHub evidence", async () => {
     const result = await loadSummary();
     expect(result).toEqual(

@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
-import { createMockKVNamespace } from "@mocks/kv-namespace";
-import type { GitHubInsightsConfig } from "../types";
+import { createGitHubConfig, createGitHubConfigWithJsonKv } from "../test-helpers";
 import { getLatestProjects } from "./list-projects";
 
 const originalFetch = globalThis.fetch;
@@ -8,19 +7,6 @@ const originalFetch = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = originalFetch;
 });
-
-function createConfig(overrides: Partial<GitHubInsightsConfig> = {}): GitHubInsightsConfig {
-  return {
-    owner: "example",
-    cacheTtlSeconds: 43_200,
-    provider: "heuristic",
-    model: "gemini-3.1-flash-lite-preview",
-    githubToken: null,
-    geminiApiKey: null,
-    kv: createMockKVNamespace(),
-    ...overrides,
-  };
-}
 
 function repo(name: string, pushedAt: string, overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -62,7 +48,7 @@ describe("getLatestProjects", () => {
         ),
     ) as unknown as typeof fetch;
 
-    const result = await getLatestProjects(createConfig());
+    const result = await getLatestProjects(createGitHubConfig());
     expect(result.projects).toHaveLength(5);
     expect(result.projects.map((project) => project.name)).not.toContain("forked");
     expect(result.projects[0]?.name).toBe("zeta");
@@ -75,30 +61,28 @@ describe("getLatestProjects", () => {
     ) as unknown as typeof fetch;
 
     const result = await getLatestProjects(
-      createConfig({
-        kv: createMockKVNamespace({
-          "github-insights/v1/owners/example/latest.json": JSON.stringify({
-            owner: "example",
-            projects: [
-              {
-                name: "cached-repo",
-                fullName: "example/cached-repo",
-                url: "https://github.com/example/cached-repo",
-                description: "cached",
-                homepageUrl: "",
-                primaryLanguage: "TypeScript",
-                topics: [],
-                stars: 3,
-                pushedAt: "2026-03-01T00:00:00.000Z",
-                updatedAt: "2026-03-01T00:00:00.000Z",
-              },
-            ],
-            cachedAt: "2026-03-01T00:00:00.000Z",
-            sourceUpdatedAt: "2026-03-01T00:00:00.000Z",
-            stale: false,
-            provider: "github",
-          }),
-        }),
+      createGitHubConfigWithJsonKv({
+        "github-insights/v1/owners/example/latest.json": {
+          owner: "example",
+          projects: [
+            {
+              name: "cached-repo",
+              fullName: "example/cached-repo",
+              url: "https://github.com/example/cached-repo",
+              description: "cached",
+              homepageUrl: "",
+              primaryLanguage: "TypeScript",
+              topics: [],
+              stars: 3,
+              pushedAt: "2026-03-01T00:00:00.000Z",
+              updatedAt: "2026-03-01T00:00:00.000Z",
+            },
+          ],
+          cachedAt: "2026-03-01T00:00:00.000Z",
+          sourceUpdatedAt: "2026-03-01T00:00:00.000Z",
+          stale: false,
+          provider: "github",
+        },
       }),
     );
 

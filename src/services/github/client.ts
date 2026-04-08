@@ -25,10 +25,6 @@ function githubHeaders(config: GitHubInsightsConfig): HeadersInit {
   };
 }
 
-function repoPath(owner: string, repo: string, suffix = ""): string {
-  return `/repos/${owner}/${repo}${suffix}`;
-}
-
 async function fetchGitHubJson<T>(
   config: GitHubInsightsConfig,
   path: string,
@@ -72,21 +68,6 @@ function decodeContent(payload: GitHubReadmeApiResponse | null): string | null {
     .trim();
 }
 
-export function toProjectListItem(repo: GitHubRepoApiItem): ProjectListItem {
-  return {
-    name: repo.name,
-    fullName: repo.full_name,
-    url: repo.html_url,
-    description: repo.description ?? "",
-    homepageUrl: repo.homepage ?? "",
-    primaryLanguage: repo.language ?? "",
-    topics: repo.topics ?? [],
-    stars: repo.stargazers_count,
-    pushedAt: repo.pushed_at,
-    updatedAt: repo.updated_at,
-  };
-}
-
 export async function listLatestPublicRepos(
   config: GitHubInsightsConfig,
   limit = DEFAULT_GITHUB_LATEST_LIMIT,
@@ -111,14 +92,27 @@ export async function listLatestPublicRepos(
     .filter((repo) => !repo.fork && !repo.archived && !repo.disabled)
     .sort((left, right) => right.pushed_at.localeCompare(left.pushed_at))
     .slice(0, limit)
-    .map(toProjectListItem);
+    .map(
+      (repo): ProjectListItem => ({
+        name: repo.name,
+        fullName: repo.full_name,
+        url: repo.html_url,
+        description: repo.description ?? "",
+        homepageUrl: repo.homepage ?? "",
+        primaryLanguage: repo.language ?? "",
+        topics: repo.topics ?? [],
+        stars: repo.stargazers_count,
+        pushedAt: repo.pushed_at,
+        updatedAt: repo.updated_at,
+      }),
+    );
 }
 
 export async function loadRepoSource(
   config: GitHubInsightsConfig,
   repo: string,
 ): Promise<GitHubRepoSource> {
-  const basePath = repoPath(config.owner, repo);
+  const basePath = `/repos/${config.owner}/${repo}`;
   const [repoInfo, readme, languages, rootEntries] = await Promise.all([
     fetchGitHubJson<GitHubRepoApiItem>(config, basePath),
     fetchGitHubJson<GitHubReadmeApiResponse>(config, `${basePath}/readme`, true),
@@ -146,8 +140,8 @@ export async function loadRepoSource(
   return {
     repo: repoInfo as GitHubRepoApiItem,
     readme: decodeContent(readme),
-    languages: (languages ?? {}) as Record<string, number>,
-    rootEntries: (rootEntries ?? []) as GitHubRepoApiFile[],
+    languages: languages ?? {},
+    rootEntries: rootEntries ?? [],
     manifestContents: Object.fromEntries(
       manifestPairs.filter((pair): pair is readonly [string, string] => pair !== null),
     ),

@@ -13,6 +13,31 @@ import {
   planDeletedOverrideKeys,
 } from "./github-insights-lib";
 
+type SyncProjectInsightsDeps = {
+  loadOverrides: typeof loadLocalProjectOverrides;
+  runWranglerCommand: typeof runWrangler;
+  writeFile: (path: string, data: string) => Promise<unknown>;
+  makeTempDir: typeof mkdtempSync;
+  removeDir: typeof rmSync;
+  log: (message: string) => void;
+};
+
+async function writeFileWithBun(path: string, data: string) {
+  if (!("Bun" in globalThis) || !globalThis.Bun?.write) {
+    throw new Error("Bun runtime is required for github-insights-sync");
+  }
+  return globalThis.Bun.write(path, data);
+}
+
+const defaultDeps: SyncProjectInsightsDeps = {
+  loadOverrides: loadLocalProjectOverrides,
+  runWranglerCommand: runWrangler,
+  writeFile: writeFileWithBun,
+  makeTempDir: mkdtempSync,
+  removeDir: rmSync,
+  log: console.log,
+};
+
 function kvCommand(
   action: "get" | "put" | "delete",
   key: string,
@@ -36,9 +61,10 @@ function kvCommand(
 function readRemoteOverrideIndex(
   repoRoot: string,
   args: SyncArgs,
+  runWranglerCommand: typeof runWrangler,
 ): ProjectInsightOverrideIndex | null {
   try {
-    const output = runWrangler(
+    const output = runWranglerCommand(
       kvCommand("get", PROJECT_INSIGHTS_OVERRIDES_INDEX_KEY, args),
       repoRoot,
     ).trim();
@@ -61,55 +87,70 @@ function readRemoteOverrideIndex(
   }
 }
 
-async function main() {
-  const repoRoot = process.cwd();
-  const args = parseSyncArgs(process.argv.slice(2));
-  const overrides = loadLocalProjectOverrides(repoRoot);
+export async function syncProjectInsights(
+  repoRoot: string,
+  args: SyncArgs,
+  deps: Partial<SyncProjectInsightsDeps> = {},
+) {
+  const { loadOverrides, log, makeTempDir, removeDir, runWranglerCommand, writeFile } = {
+    ...defaultDeps,
+    ...deps,
+  };
+  const overrides = loadOverrides(repoRoot);
   const nextIndex = buildProjectInsightOverrideIndex(overrides);
-  const previousIndex = readRemoteOverrideIndex(repoRoot, args);
+  const previousIndex = readRemoteOverrideIndex(repoRoot, args, runWranglerCommand);
   const keysToDelete = planDeletedOverrideKeys(
     previousIndex?.managedKeys ?? [],
     nextIndex.managedKeys,
   );
 
-  console.log(`Environment: ${args.env ?? "<top-level>"}`);
-  console.log(`Mode: ${args.dryRun ? "dry-run" : "apply"}`);
-  console.log(`Override count: ${overrides.length}`);
-  console.log(`Delete count: ${keysToDelete.length}`);
+  log(`Environment: ${args.env ?? "<top-level>"}`);
+  log(`Mode: ${args.dryRun ? "dry-run" : "apply"}`);
+  log(`Override count: ${overrides.length}`);
+  log(`Delete count: ${keysToDelete.length}`);
 
   if (args.dryRun) {
     for (const override of overrides) {
-      console.log(`UPLOAD ${override.remoteKey} <= ${override.filePath}`);
+      log(`UPLOAD ${override.remoteKey} <= ${override.filePath}`);
     }
-    for (const key of keysToDelete) console.log(`DELETE ${key}`);
-    console.log(`UPLOAD ${PROJECT_INSIGHTS_OVERRIDES_INDEX_KEY} <= <generated>`);
+    for (const key of keysToDelete) log(`DELETE ${key}`);
+    log(`UPLOAD ${PROJECT_INSIGHTS_OVERRIDES_INDEX_KEY} <= <generated>`);
     return;
   }
 
-  const tempDir = mkdtempSync(join(tmpdir(), "project-insights-sync-"));
+  const tempDir = makeTempDir(join(tmpdir(), "project-insights-sync-"));
   try {
     for (const override of overrides) {
       const filePath = join(tempDir, `${override.override.repo}.json`);
-      await Bun.write(filePath, JSON.stringify(override.override, null, 2));
-      runWrangler(kvCommand("put", override.remoteKey, args, filePath), repoRoot);
+      await writeFile(filePath, JSON.stringify(override.override, null, 2));
+      runWranglerCommand(kvCommand("put", override.remoteKey, args, filePath), repoRoot);
     }
     for (const key of keysToDelete) {
-      runWrangler(kvCommand("delete", key, args), repoRoot);
+      runWranglerCommand(kvCommand("delete", key, args), repoRoot);
     }
 
     const indexPath = join(tempDir, "override-index.json");
-    await Bun.write(indexPath, JSON.stringify(nextIndex, null, 2));
-    runWrangler(kvCommand("put", PROJECT_INSIGHTS_OVERRIDES_INDEX_KEY, args, indexPath), repoRoot);
+    await writeFile(indexPath, JSON.stringify(nextIndex, null, 2));
+    runWranglerCommand(
+      kvCommand("put", PROJECT_INSIGHTS_OVERRIDES_INDEX_KEY, args, indexPath),
+      repoRoot,
+    );
   } finally {
-    rmSync(tempDir, { recursive: true, force: true });
+    removeDir(tempDir, { recursive: true, force: true });
   }
 
-  console.log(
+  log(
     `Sync complete. Uploaded ${overrides.length} override file(s) and deleted ${keysToDelete.length}.`,
   );
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-});
+async function main() {
+  await syncProjectInsights(process.cwd(), parseSyncArgs(process.argv.slice(2)));
+}
+
+if (import.meta.main) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  });
+}

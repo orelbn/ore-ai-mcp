@@ -1,25 +1,18 @@
-import type { z } from "zod";
-import type {
-  latestProjectsResultSchema,
-  projectArchitectureResultSchema,
-  projectComponentSchema,
-  projectDesignDecisionSchema,
-  projectEvidenceSchema,
-  projectInsightOverrideSchema,
-  projectListItemSchema,
-  projectSummaryResultSchema,
+import type { ProjectArchitectureResult, ProjectSummaryResult } from "./schema";
+
+export type {
+  LatestProjectsResult,
+  ProjectComponent,
+  ProjectDesignDecision,
+  ProjectEvidence,
+  ProjectInsightOverride,
+  ProjectListItem,
+  ProjectArchitectureResult,
+  ProjectSummaryResult,
 } from "./schema";
 
 export type GitHubInsightsProvider = "heuristic" | "google";
-
-export type ProjectEvidence = z.infer<typeof projectEvidenceSchema>;
-export type ProjectComponent = z.infer<typeof projectComponentSchema>;
-export type ProjectDesignDecision = z.infer<typeof projectDesignDecisionSchema>;
-export type ProjectListItem = z.infer<typeof projectListItemSchema>;
-export type LatestProjectsResult = z.infer<typeof latestProjectsResultSchema>;
-export type ProjectSummaryResult = z.infer<typeof projectSummaryResultSchema>;
-export type ProjectArchitectureResult = z.infer<typeof projectArchitectureResultSchema>;
-export type ProjectInsightOverride = z.infer<typeof projectInsightOverrideSchema>;
+export type ProjectInsightKind = "summary" | "architecture";
 
 export type GitHubRepoApiItem = {
   name: string;
@@ -76,17 +69,12 @@ export type ProjectArchitectureDraft = Omit<
   ProjectArchitectureResult,
   "cachedAt" | "sourceUpdatedAt" | "stale" | "overrideSignature"
 >;
-
-export type RepoInsightPromptInput = {
-  source: GitHubRepoSource;
-  evidence: ProjectEvidence[];
-  summaryDraft: ProjectSummaryDraft;
-  architectureDraft: ProjectArchitectureDraft;
-  override: ProjectInsightOverride | null;
+export type ProjectInsightDraftByKind = {
+  summary: ProjectSummaryDraft;
+  architecture: ProjectArchitectureDraft;
 };
 
-export type RepoInsightEnricher = {
-  provider: GitHubInsightsProvider;
-  summarize(input: RepoInsightPromptInput): Promise<ProjectSummaryDraft>;
-  describeArchitecture(input: RepoInsightPromptInput): Promise<ProjectArchitectureDraft>;
+export type ProjectInsightResultByKind = {
+  summary: ProjectSummaryResult;
+  architecture: ProjectArchitectureResult;
 };
